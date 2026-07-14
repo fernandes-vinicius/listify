@@ -1,32 +1,32 @@
-import { createId, readStorage, writeStorage } from "~/shared/lib/storage";
 import type { ShoppingList } from "~/domains/shopping-lists/types/shopping-list-types";
+import { createId } from "~/shared/lib/id";
 
-interface StorageShape {
+// Formato completo gravado no cookie (ver shared/lib/storage.server.ts) — a
+// única "raiz" de dados do app. Funções aqui são puras: recebem o storage já
+// lido do cookie e devolvem o storage atualizado, sem tocar em cookie/request
+// diretamente — isso fica a cargo do loader/action de cada rota.
+export interface AppStorage {
 	lists: ShoppingList[];
 }
 
-const EMPTY_STORAGE: StorageShape = { lists: [] };
+export const EMPTY_STORAGE: AppStorage = { lists: [] };
 
-function getStorage(): StorageShape {
-	return readStorage(EMPTY_STORAGE);
+export function getShoppingLists(storage: AppStorage): ShoppingList[] {
+	return storage.lists;
 }
 
-function saveStorage(data: StorageShape): void {
-	writeStorage(data);
-}
-
-export function getShoppingLists(): ShoppingList[] {
-	return getStorage().lists;
-}
-
-export function getShoppingListById(id: string): ShoppingList | undefined {
-	return getStorage().lists.find((list) => list.id === id);
+export function getShoppingListById(
+	storage: AppStorage,
+	id: string,
+): ShoppingList | undefined {
+	return storage.lists.find((list) => list.id === id);
 }
 
 export function createShoppingList(
+	storage: AppStorage,
 	name: string,
 	budget: number | null = null,
-): ShoppingList {
+): { storage: AppStorage; list: ShoppingList } {
 	const now = new Date().toISOString();
 	const list: ShoppingList = {
 		id: createId(),
@@ -37,11 +37,7 @@ export function createShoppingList(
 		items: [],
 	};
 
-	const data = getStorage();
-	data.lists.push(list);
-	saveStorage(data);
-
-	return list;
+	return { storage: { lists: [...storage.lists, list] }, list };
 }
 
 export interface UpdateShoppingListInput {
@@ -50,21 +46,27 @@ export interface UpdateShoppingListInput {
 }
 
 export function updateShoppingList(
+	storage: AppStorage,
 	id: string,
 	input: UpdateShoppingListInput,
-): void {
-	const data = getStorage();
-	const list = data.lists.find((l) => l.id === id);
-	if (!list) return;
-
-	list.name = input.name;
-	list.budget = input.budget;
-	list.updatedAt = new Date().toISOString();
-	saveStorage(data);
+): AppStorage {
+	return {
+		lists: storage.lists.map((list) =>
+			list.id === id
+				? {
+						...list,
+						name: input.name,
+						budget: input.budget,
+						updatedAt: new Date().toISOString(),
+					}
+				: list,
+		),
+	};
 }
 
-export function deleteShoppingList(id: string): void {
-	const data = getStorage();
-	data.lists = data.lists.filter((list) => list.id !== id);
-	saveStorage(data);
+export function deleteShoppingList(
+	storage: AppStorage,
+	id: string,
+): AppStorage {
+	return { lists: storage.lists.filter((list) => list.id !== id) };
 }

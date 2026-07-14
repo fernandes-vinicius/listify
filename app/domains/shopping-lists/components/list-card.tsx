@@ -1,9 +1,19 @@
 import { Link } from "react-router";
+
 import { getListTotals } from "~/domains/shopping-list-items";
 import type { ShoppingList } from "~/domains/shopping-lists/types/shopping-list-types";
 import { getBudgetStatus } from "~/domains/shopping-lists/utils/budget-status";
 import { MoreVertical, Pencil, Trash2 } from "~/shared/components/icons";
-import { Card } from "~/shared/components/ui/card";
+import { Badge } from "~/shared/components/ui/badge";
+import { Button } from "~/shared/components/ui/button";
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "~/shared/components/ui/card";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -29,65 +39,69 @@ export function ListCard({ list, onRename, onDelete }: ListCardProps) {
 		: null;
 
 	return (
-		<Card className="relative gap-3 p-4 sm:p-5">
+		<Card className="relative">
 			<Link
 				to={`/lists/${list.id}`}
 				className="absolute inset-0"
 				aria-label={`Abrir lista ${list.name}`}
 			/>
 
-			<div className="flex items-start justify-between gap-2">
-				<h3 className="font-semibold text-base">{list.name}</h3>
-				<DropdownMenu>
-					<DropdownMenuTrigger className="relative z-10 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted">
-						<MoreVertical className="size-4" />
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						<DropdownMenuItem onClick={onRename}>
-							<Pencil className="size-3.5" />
-							Editar
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={onDelete} variant="destructive">
-							<Trash2 className="size-3.5" />
-							Excluir
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
-
-			<div className="flex items-center justify-between font-medium text-muted-foreground text-xs">
-				<span>
-					{activeCount === 0
-						? "Sem itens"
-						: `${totals.checkedCount}/${activeCount} itens`}
-				</span>
-				{isComplete && (
-					<span className="rounded-full bg-green-100 px-2 py-0.5 font-semibold text-[11px] text-green-700 dark:bg-green-500/15 dark:text-green-400">
-						Completa
+			<CardHeader>
+				<CardTitle>
+					<h3>{list.name}</h3>
+				</CardTitle>
+				<CardAction>
+					<DropdownMenu>
+						<DropdownMenuTrigger
+							className="relative z-10"
+							render={
+								<Button size="icon-sm" variant="ghost">
+									<MoreVertical />
+								</Button>
+							}
+						/>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={onRename}>
+								<Pencil />
+								Editar
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={onDelete} variant="destructive">
+								<Trash2 />
+								Excluir
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</CardAction>
+			</CardHeader>
+			<CardContent>
+				<div className="mb-2.5 flex items-center justify-between text-muted-foreground text-xs">
+					<span>
+						{activeCount === 0
+							? "Sem itens"
+							: `${totals.checkedCount}/${activeCount} itens`}
 					</span>
-				)}
-			</div>
-
-			<Progress value={totals.progress} />
-
+					{isComplete && <Badge variant="tertiary">Completa</Badge>}
+				</div>
+				<Progress value={totals.progress} />
+			</CardContent>
 			{list.budget && (
-				<div
+				<CardFooter
 					className={cn(
-						"flex items-center justify-between text-xs",
-						budgetStatus === "over" && "font-semibold text-destructive",
+						"mt-auto justify-between font-normal text-xs sm:flex-col sm:justify-center sm:text-center",
+						budgetStatus === "over" && "font-medium text-destructive",
 						budgetStatus === "close" &&
-							"font-semibold text-amber-700 dark:text-amber-400",
+							"font-medium text-amber-700 dark:text-amber-400",
 						budgetStatus === "ok" && "text-muted-foreground",
 					)}
 				>
 					<span>Orçamento</span>
-					<span>
+					<span className="text-right sm:text-center">
 						{formatCurrency(totals.estimatedTotal)}{" "}
 						<span className="text-muted-foreground/60">
 							/ {formatCurrency(list.budget)}
 						</span>
 					</span>
-				</div>
+				</CardFooter>
 			)}
 		</Card>
 	);

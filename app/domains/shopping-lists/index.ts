@@ -10,8 +10,10 @@ export {
 } from "~/domains/shopping-lists/schemas/shopping-list-schema";
 
 export {
+	type AppStorage,
 	createShoppingList,
 	deleteShoppingList,
+	EMPTY_STORAGE,
 	getShoppingListById,
 	getShoppingLists,
 	type UpdateShoppingListInput,

@@ -1,11 +1,12 @@
 import { parseWithZod } from "@conform-to/zod";
 import { useState } from "react";
-import { redirect } from "react-router";
+import { data, redirect } from "react-router";
 
 import {
 	createShoppingList,
 	DeleteListDialog,
 	deleteShoppingList,
+	EMPTY_STORAGE,
 	getShoppingLists,
 	ListCard,
 	ListFormDialog,
@@ -14,8 +15,10 @@ import {
 	updateShoppingList,
 	useDeleteShoppingList,
 } from "~/domains/shopping-lists";
-import { Plus, ShoppingBasket } from "~/shared/components/icons";
+import { Plus } from "~/shared/components/icons";
+import { Logo } from "~/shared/components/logo";
 import { Button } from "~/shared/components/ui/button";
+import { readStorage, serializeStorage } from "~/shared/lib/storage.server";
 
 import type { Route } from "./+types/_index";
 
@@ -23,11 +26,13 @@ export function meta() {
 	return [{ title: "Listify — Suas listas" }];
 }
 
-export async function clientLoader() {
-	return { lists: getShoppingLists() };
+export async function loader({ request }: Route.LoaderArgs) {
+	const storage = await readStorage(request, EMPTY_STORAGE);
+	return { lists: getShoppingLists(storage) };
 }
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function action({ request }: Route.ActionArgs) {
+	const storage = await readStorage(request, EMPTY_STORAGE);
 	const formData = await request.formData();
 	const intent = formData.get("intent");
 
@@ -38,11 +43,15 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 			});
 			if (submission.status !== "success") return submission.reply();
 
-			const list = createShoppingList(
+			const { storage: next, list } = createShoppingList(
+				storage,
 				submission.value.name,
 				submission.value.budget,
 			);
-			return redirect(`/lists/${list.id}`);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return redirect(`/lists/${list.id}`, { headers });
 		}
 		case "update-list": {
 			const submission = parseWithZod(formData, {
@@ -51,13 +60,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 			if (submission.status !== "success") return submission.reply();
 
 			const id = String(formData.get("id") ?? "");
-			if (id) updateShoppingList(id, submission.value);
-			return submission.reply();
+			const next = id
+				? updateShoppingList(storage, id, submission.value)
+				: storage;
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(submission.reply(), { headers });
 		}
 		case "delete-list": {
 			const id = String(formData.get("id") ?? "");
-			if (id) deleteShoppingList(id);
-			return null;
+			const next = id ? deleteShoppingList(storage, id) : storage;
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(null, { headers });
 		}
 		default:
 			return null;
@@ -73,13 +90,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 	const [deletingList, setDeletingList] = useState<ShoppingList | null>(null);
 
 	return (
-		<div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10 md:py-14">
-			<div className="mb-8 flex items-center gap-2.5 font-bold text-lg tracking-tight sm:mb-11">
-				<span className="flex size-7 items-center justify-center rounded-lg bg-foreground text-background">
-					<ShoppingBasket className="size-4" />
-				</span>
-				Listify
-			</div>
+		<div className="container-wrapper">
+			<Logo className="mb-8 sm:mb-11" />
 
 			<div className="mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
 				<div>

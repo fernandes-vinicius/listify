@@ -2,6 +2,7 @@ import { getFormProps, getInputProps, useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
+
 import { shoppingListFormSchema } from "~/domains/shopping-lists/schemas/shopping-list-schema";
 import { CurrencyInput } from "~/shared/components/currency-input";
 import { Button } from "~/shared/components/ui/button";
@@ -63,6 +64,7 @@ export function ListFormDialog({
 	// redirect e a rota some, então o Sheet nem chega a permanecer montado). Já
 	// "editar" não redireciona, então fechamos o Sheet manualmente ao ver um
 	// `lastResult` de sucesso.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 	useEffect(() => {
 		if (mode === "edit" && fetcher.data && !fetcher.data.error) {
 			onOpenChange(false);
@@ -74,7 +76,7 @@ export function ListFormDialog({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
-				className="mx-auto flex min-h-[96%] w-full max-w-xl flex-col rounded-t-xl sm:min-h-auto"
+				className="mx-auto flex min-h-[96%] w-full max-w-xl flex-col rounded-t-2xl sm:min-h-auto"
 			>
 				<fetcher.Form
 					method="post"
@@ -88,7 +90,7 @@ export function ListFormDialog({
 					/>
 					{mode === "edit" && <input type="hidden" name="id" value={listId} />}
 
-					<SheetHeader className="p-4 text-center">
+					<SheetHeader className="text-center">
 						<SheetTitle>
 							{mode === "create" ? "Criar nova lista" : "Editar lista"}
 						</SheetTitle>
@@ -99,7 +101,7 @@ export function ListFormDialog({
 						</SheetDescription>
 					</SheetHeader>
 
-					<FieldGroup className="overflow-y-auto p-4">
+					<FieldGroup className="overflow-y-auto p-6">
 						<Field>
 							<FieldLabel htmlFor={fields.name.id}>Nome</FieldLabel>
 							<Input
@@ -128,7 +130,7 @@ export function ListFormDialog({
 						</Field>
 					</FieldGroup>
 
-					<SheetFooter className="border-t p-4">
+					<SheetFooter>
 						<Button type="submit" disabled={submitting}>
 							{submitting
 								? "Salvando…"

@@ -1,6 +1,6 @@
 import { parseWithZod } from "@conform-to/zod";
 import { useState } from "react";
-import { Link, redirect } from "react-router";
+import { data, Link, redirect } from "react-router";
 
 import {
 	addItem,
@@ -19,9 +19,10 @@ import {
 	useToggleItemStatus,
 } from "~/domains/shopping-list-items";
 import {
-	BudgetAlert,
+	// BudgetAlert,
 	DeleteListDialog,
 	deleteShoppingList,
+	EMPTY_STORAGE,
 	getShoppingListById,
 	ListFormDialog,
 	shoppingListFormSchema,
@@ -44,6 +45,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/shared/components/ui/dropdown-menu";
+import { readStorage, serializeStorage } from "~/shared/lib/storage.server";
 import { cn, formatCurrency } from "~/shared/lib/utils";
 import type { Route } from "./+types/lists.$listId";
 
@@ -53,17 +55,16 @@ export function meta({ loaderData }: Route.MetaArgs) {
 	];
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-	const list = getShoppingListById(params.listId);
+export async function loader({ request, params }: Route.LoaderArgs) {
+	const storage = await readStorage(request, EMPTY_STORAGE);
+	const list = getShoppingListById(storage, params.listId);
 	if (!list) throw new Response("Lista não encontrada", { status: 404 });
 	return { list };
 }
 
-export async function clientAction({
-	request,
-	params,
-}: Route.ClientActionArgs) {
+export async function action({ request, params }: Route.ActionArgs) {
 	const listId = params.listId;
+	const storage = await readStorage(request, EMPTY_STORAGE);
 	const formData = await request.formData();
 	const intent = formData.get("intent");
 
@@ -74,46 +75,68 @@ export async function clientAction({
 			});
 			if (submission.status !== "success") return submission.reply();
 
-			updateShoppingList(listId, submission.value);
-			return submission.reply();
+			const next = updateShoppingList(storage, listId, submission.value);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(submission.reply(), { headers });
 		}
 		case "delete-list": {
-			deleteShoppingList(listId);
-			return redirect("/");
+			const next = deleteShoppingList(storage, listId);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return redirect("/", { headers });
 		}
 		case "add-item": {
 			const submission = parseWithZod(formData, { schema: itemFormSchema });
 			if (submission.status !== "success") return submission.reply();
 
-			addItem(listId, submission.value);
-			return submission.reply({ resetForm: true });
+			const { storage: next } = addItem(storage, listId, submission.value);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(submission.reply({ resetForm: true }), { headers });
 		}
 		case "edit-item": {
 			const submission = parseWithZod(formData, { schema: itemFormSchema });
 			if (submission.status !== "success") return submission.reply();
 
 			const itemId = String(formData.get("itemId") ?? "");
-			updateItem(listId, itemId, submission.value);
-			return submission.reply();
+			const next = updateItem(storage, listId, itemId, submission.value);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(submission.reply(), { headers });
 		}
 		case "delete-item": {
-			deleteItem(listId, String(formData.get("itemId") ?? ""));
-			return null;
+			const itemId = String(formData.get("itemId") ?? "");
+			const next = deleteItem(storage, listId, itemId);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(null, { headers });
 		}
 		case "toggle-status": {
-			setItemStatus(
-				listId,
-				String(formData.get("itemId") ?? ""),
-				String(formData.get("status") ?? "unchecked") as ItemStatus,
-			);
-			return null;
+			const itemId = String(formData.get("itemId") ?? "");
+			const status = String(
+				formData.get("status") ?? "unchecked",
+			) as ItemStatus;
+			const next = setItemStatus(storage, listId, itemId, status);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(null, { headers });
 		}
 		case "reorder-items": {
 			const itemIds = JSON.parse(
 				String(formData.get("itemIds") ?? "[]"),
 			) as string[];
-			reorderItems(listId, itemIds);
-			return null;
+			const next = reorderItems(storage, listId, itemIds);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(null, { headers });
 		}
 		default:
 			return null;
@@ -158,7 +181,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const budgetStatus = getBudgetStatus(estimatedTotal, list.budget ?? 0);
 
 	return (
-		<div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 md:py-14">
+		<div className="container-wrapper">
 			<div className="mb-6 flex items-center gap-2.5 sm:mb-7 sm:gap-3.5">
 				<Link
 					to="/"
@@ -219,7 +242,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 			</div>
 
 			<ListTotalsSummary items={list.items} />
-			<BudgetAlert budget={list.budget} items={list.items} />
+			{/* <BudgetAlert budget={list.budget} items={list.items} /> */}
 
 			<div className="mb-4 flex items-center justify-between">
 				<h2 className="font-bold text-lg tracking-tight">Itens</h2>
