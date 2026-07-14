@@ -48,7 +48,7 @@ export function ListFormDialog({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
-				className="mx-auto flex min-h-[95vh] w-full max-w-xl flex-col rounded-t-xl"
+				className="mx-auto flex max-h-[95%] min-h-[95%] w-full max-w-xl flex-col rounded-t-xl"
 			>
 				<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
 					<SheetHeader className="p-4 text-center">
