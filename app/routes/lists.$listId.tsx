@@ -15,10 +15,12 @@ import {
 	reorderItems,
 	setAllItemsStatus,
 	setItemStatus,
+	sortItemsByName,
 	updateItem,
 	useDeleteItem,
 	useReorderItems,
 	useSetAllItemsStatus,
+	useSortItemsByName,
 	useToggleItemStatus,
 } from "~/domains/shopping-list-items";
 import {
@@ -34,6 +36,9 @@ import {
 } from "~/domains/shopping-lists";
 import { getBudgetStatus } from "~/domains/shopping-lists/utils/budget-status";
 import {
+	ArrowDownAZ,
+	ArrowDownZA,
+	ArrowUpDown,
 	Check,
 	ChevronLeft,
 	Circle,
@@ -154,6 +159,14 @@ export async function action({ request, params }: Route.ActionArgs) {
 			});
 			return data(null, { headers });
 		}
+		case "sort-items": {
+			const direction = formData.get("direction") === "desc" ? "desc" : "asc";
+			const next = sortItemsByName(storage, listId, direction);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(null, { headers });
+		}
 		default:
 			return null;
 	}
@@ -166,6 +179,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const { setItemStatus: submitStatus } = useToggleItemStatus();
 	const { reorderItems: submitReorder } = useReorderItems();
 	const { setAllItemsStatus: submitAllStatus } = useSetAllItemsStatus();
+	const { sortItemsByName: submitSort } = useSortItemsByName();
 	const { deleteShoppingList: deleteList } = useDeleteShoppingList();
 
 	const [isEditOpen, setEditOpen] = useState(false);
@@ -279,10 +293,36 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 
 			<div className="mt-6 mb-4 flex items-center justify-between">
 				<h2 className="font-semibold text-lg tracking-tight">Itens</h2>
-				<Button onClick={() => setAddOpen(true)}>
-					<Plus />
-					Adicionar item
-				</Button>
+				<div className="flex items-center gap-1.5">
+					<Button onClick={() => setAddOpen(true)}>
+						<Plus />
+						Adicionar item
+					</Button>
+					<DropdownMenu>
+						<DropdownMenuTrigger
+							render={
+								<Button
+									size="icon-sm"
+									variant="outline"
+									disabled={list.items.length === 0}
+									aria-label="Reordenar itens"
+								>
+									<ArrowUpDown />
+								</Button>
+							}
+						/>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={() => submitSort("asc")}>
+								<ArrowDownAZ />
+								Nome (A-Z)
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => submitSort("desc")}>
+								<ArrowDownZA />
+								Nome (Z-A)
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</div>
 			</div>
 
 			{list.items.length === 0 ? (

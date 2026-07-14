@@ -1,4 +1,7 @@
 export {
+	ArrowDownAZ,
+	ArrowDownZA,
+	ArrowUpDown,
 	Camera,
 	Check,
 	CheckIcon,

@@ -51,3 +51,13 @@ export function useSetAllItemsStatus() {
 
 	return { setAllItemsStatus, isSubmitting: fetcher.state !== "idle" };
 }
+
+export function useSortItemsByName() {
+	const fetcher = useFetcher();
+
+	function sortItemsByName(direction: "asc" | "desc") {
+		fetcher.submit({ intent: "sort-items", direction }, { method: "post" });
+	}
+
+	return { sortItemsByName, isSubmitting: fetcher.state !== "idle" };
+}

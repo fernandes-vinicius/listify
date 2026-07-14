@@ -19,6 +19,7 @@ export {
 	setItemStatus,
 	setAllItemsStatus,
 	reorderItems,
+	sortItemsByName,
 	type ItemInput,
 } from "~/domains/shopping-list-items/services/shopping-list-items-service";
 
@@ -27,6 +28,7 @@ export {
 	useToggleItemStatus,
 	useReorderItems,
 	useSetAllItemsStatus,
+	useSortItemsByName,
 } from "~/domains/shopping-list-items/hooks/use-shopping-list-items";
 
 export { ItemSection } from "~/domains/shopping-list-items/components/item-section";

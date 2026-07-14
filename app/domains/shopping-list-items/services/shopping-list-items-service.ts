@@ -143,6 +143,34 @@ export function setAllItemsStatus(
 	};
 }
 
+// Reordena todos os itens da lista pelo nome (A-Z ou Z-A), reatribuindo
+// `order` de acordo — diferente de `reorderItems` (que só reordena um
+// subconjunto, ex.: drag-and-drop dentro de uma seção), esse afeta a lista
+// inteira de uma vez.
+export function sortItemsByName(
+	storage: StorageShape,
+	listId: string,
+	direction: "asc" | "desc",
+): StorageShape {
+	return {
+		lists: storage.lists.map((list) => {
+			if (list.id !== listId) return list;
+
+			const sorted = [...list.items].sort((a, b) => {
+				const comparison = a.name.localeCompare(b.name, "pt-BR", {
+					sensitivity: "base",
+				});
+				return direction === "asc" ? comparison : -comparison;
+			});
+
+			return {
+				...list,
+				items: sorted.map((item, index) => ({ ...item, order: index })),
+			};
+		}),
+	};
+}
+
 // Recebe a ordem de um subconjunto de itens (ex.: só os "pendentes") e
 // atualiza apenas o `order` desses itens — os demais permanecem intactos,
 // para não perder itens "comprados"/"tenho em casa" fora do subconjunto.
