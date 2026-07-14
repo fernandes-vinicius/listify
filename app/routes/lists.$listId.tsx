@@ -247,10 +247,10 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 			<ListTotalsSummary items={list.items} />
 			{/* <BudgetAlert budget={list.budget} items={list.items} /> */}
 
-			<div className="mb-4 flex items-center justify-between">
-				<h2 className="font-bold text-lg tracking-tight">Itens</h2>
+			<div className="mt-6 mb-4 flex items-center justify-between">
+				<h2 className="font-semibold text-lg tracking-tight">Itens</h2>
 				<Button onClick={() => setAddOpen(true)}>
-					<Plus className="size-4" />
+					<Plus />
 					Adicionar item
 				</Button>
 			</div>
