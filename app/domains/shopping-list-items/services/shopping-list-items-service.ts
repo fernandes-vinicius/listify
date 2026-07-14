@@ -1,8 +1,8 @@
-import { createId, readStorage, writeStorage } from "~/shared/lib/storage";
 import type {
 	ItemStatus,
 	ShoppingItem,
 } from "~/domains/shopping-list-items/types/item-types";
+import { createId, readStorage, writeStorage } from "~/shared/lib/storage";
 
 // Visão mínima do storage raiz: este domínio só precisa de `id` e `items` de
 // cada lista, sem depender do tipo `ShoppingList` do domínio shopping-lists

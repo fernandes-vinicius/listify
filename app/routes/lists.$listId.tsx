@@ -1,15 +1,15 @@
 import { parseWithZod } from "@conform-to/zod";
-import { DotIcon } from "lucide-react";
 import { useState } from "react";
 import { Link, redirect } from "react-router";
+
 import {
 	addItem,
 	deleteItem,
 	getListTotals,
 	ItemFormDrawer,
-	itemFormSchema,
 	ItemSection,
 	type ItemStatus,
+	itemFormSchema,
 	ListTotalsSummary,
 	reorderItems,
 	setItemStatus,
@@ -31,6 +31,7 @@ import {
 import { getBudgetStatus } from "~/domains/shopping-lists/utils/budget-status";
 import {
 	ChevronLeft,
+	DotIcon,
 	MoreVertical,
 	Pencil,
 	Plus,

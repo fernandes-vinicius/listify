@@ -2,16 +2,15 @@ import type {
 	DraggableAttributes,
 	DraggableSyntheticListeners,
 } from "@dnd-kit/core";
-
-import { GripVertical } from "~/shared/components/icons";
-import { Badge } from "~/shared/components/ui/badge";
-import { cn, formatCurrency } from "~/shared/lib/utils";
 import { ItemStatusToggle } from "~/domains/shopping-list-items/components/item-status-toggle";
-import { getItemTotal } from "~/domains/shopping-list-items/utils/item-totals";
 import type {
 	ItemStatus,
 	ShoppingItem,
 } from "~/domains/shopping-list-items/types/item-types";
+import { getItemTotal } from "~/domains/shopping-list-items/utils/item-totals";
+import { GripVertical } from "~/shared/components/icons";
+import { Badge } from "~/shared/components/ui/badge";
+import { cn, formatCurrency } from "~/shared/lib/utils";
 
 interface ItemRowProps {
 	item: ShoppingItem;
@@ -31,6 +30,7 @@ export function ItemRow({
 	onEdit,
 }: ItemRowProps) {
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: <>
 		<div
 			role="button"
 			tabIndex={0}
@@ -60,7 +60,7 @@ export function ItemRow({
 			<div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2.5">
 				<span
 					className={cn(
-						"truncate text-sm font-semibold",
+						"truncate font-semibold text-sm",
 						item.status === "checked" &&
 							"text-muted-foreground/60 line-through decoration-muted-foreground/40",
 						item.status === "have_at_home" && "text-foreground/70",
@@ -86,13 +86,13 @@ export function ItemRow({
 			>
 				<span
 					className={cn(
-						"hidden text-right text-xs text-muted-foreground/70 sm:inline-block sm:w-14",
+						"hidden text-right text-muted-foreground/70 text-xs sm:inline-block sm:w-14",
 						item.status !== "unchecked" && "text-muted-foreground/50",
 					)}
 				>
 					{formatCurrency(item.price)}
 				</span>
-				<span className="text-right text-sm font-bold sm:w-18">
+				<span className="text-right font-bold text-sm sm:w-18">
 					{formatCurrency(getItemTotal(item))}
 				</span>
 			</button>

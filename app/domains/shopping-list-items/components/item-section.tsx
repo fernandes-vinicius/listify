@@ -1,10 +1,10 @@
-import { cn } from "~/shared/lib/utils";
 import { ItemRow } from "~/domains/shopping-list-items/components/item-row";
 import { SortableItemList } from "~/domains/shopping-list-items/components/sortable-item-list";
 import type {
 	ItemStatus,
 	ShoppingItem,
 } from "~/domains/shopping-list-items/types/item-types";
+import { cn } from "~/shared/lib/utils";
 
 const SECTION_META: Record<
 	ItemStatus,
@@ -46,10 +46,10 @@ export function ItemSection({
 					className={cn("size-2 shrink-0 rounded-full", meta.dotClassName)}
 					aria-hidden="true"
 				/>
-				<h3 className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
+				<h3 className="font-bold text-muted-foreground text-xs uppercase tracking-wide">
 					{meta.title}
 				</h3>
-				<span className="text-xs font-semibold text-muted-foreground/60">
+				<span className="font-semibold text-muted-foreground/60 text-xs">
 					· {items.length}
 				</span>
 			</div>

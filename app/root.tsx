@@ -9,6 +9,7 @@ import {
 
 import { InstallPrompt } from "~/shared/components/pwa/install-prompt";
 import { RegisterPWA } from "~/shared/components/pwa/register-pwa";
+
 import type { Route } from "./+types/root";
 import { AppProviders } from "./providers/app-providers";
 import "./app.css";

@@ -1,18 +1,19 @@
 import {
-	DndContext,
-	PointerSensor,
 	closestCenter,
+	DndContext,
+	type DragEndEvent,
+	PointerSensor,
 	useSensor,
 	useSensors,
-	type DragEndEvent,
 } from "@dnd-kit/core";
 import {
-	SortableContext,
 	arrayMove,
+	SortableContext,
 	useSortable,
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 import { ItemRow } from "~/domains/shopping-list-items/components/item-row";
 import type {
 	ItemStatus,

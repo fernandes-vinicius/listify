@@ -9,8 +9,8 @@ import {
 	getShoppingLists,
 	ListCard,
 	ListFormDialog,
-	shoppingListFormSchema,
 	type ShoppingList,
+	shoppingListFormSchema,
 	updateShoppingList,
 	useDeleteShoppingList,
 } from "~/domains/shopping-lists";

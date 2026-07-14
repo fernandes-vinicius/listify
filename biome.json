@@ -7,7 +7,14 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"includes": ["**", "!node_modules", "!.react-router", "!dist", "!build"]
+		"includes": [
+			"**",
+			"!node_modules",
+			"!.react-router",
+			"!dist",
+			"!build",
+			"!public/tesseract"
+		]
 	},
 	"formatter": {
 		"enabled": true,

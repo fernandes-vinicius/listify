@@ -2,6 +2,7 @@ import { getFormProps, getInputProps, useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
+import { PriceScanButton } from "~/domains/shopping-list-items/components/price-scan-button";
 import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 import { CurrencyInput } from "~/shared/components/currency-input";
@@ -112,6 +113,7 @@ export function ItemFormDrawer({
 	// `{ initialValue: null }` sem nenhum campo `status` — só o reply comum de
 	// erro tem `error` preenchido — então "sem erro" é o sinal de sucesso, não
 	// `status === "success"`.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 	useEffect(() => {
 		if (!fetcher.data || fetcher.data.error) return;
 
@@ -199,12 +201,18 @@ export function ItemFormDrawer({
 							<Field>
 								<FieldLabel htmlFor="item-price">Preço unitário</FieldLabel>
 								<input type="hidden" name="price" value={price} readOnly />
-								<CurrencyInput
-									ref={priceInputRef}
-									id="item-price"
-									value={price}
-									onValueChange={setPrice}
-								/>
+								<div className="flex gap-1.5">
+									<CurrencyInput
+										ref={priceInputRef}
+										id="item-price"
+										value={price}
+										onValueChange={setPrice}
+										className="min-w-0 flex-1"
+									/>
+									{mode === "edit" && (
+										<PriceScanButton onPriceDetected={setPrice} />
+									)}
+								</div>
 								<FieldError>{fields.price.errors?.[0]}</FieldError>
 							</Field>
 						</div>

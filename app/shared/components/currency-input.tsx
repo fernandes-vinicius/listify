@@ -1,16 +1,7 @@
-import { forwardRef, type ChangeEvent, type ComponentProps } from "react";
+import { type ChangeEvent, type ComponentProps, forwardRef } from "react";
+
 import { Input } from "~/shared/components/ui/input";
-
-function centsToValue(cents: number): number {
-	return cents / 100;
-}
-
-function formatCents(cents: number): string {
-	return centsToValue(cents).toLocaleString("pt-BR", {
-		style: "currency",
-		currency: "BRL",
-	});
-}
+import { centsToValue, formatCents } from "~/shared/lib/utils";
 
 interface CurrencyInputProps
 	extends Omit<ComponentProps<typeof Input>, "value" | "onChange" | "type"> {

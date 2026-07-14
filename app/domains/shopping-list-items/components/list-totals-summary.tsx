@@ -1,6 +1,6 @@
-import { Progress } from "~/shared/components/ui/progress";
-import { getListTotals } from "~/domains/shopping-list-items/utils/item-totals";
 import type { ShoppingItem } from "~/domains/shopping-list-items/types/item-types";
+import { getListTotals } from "~/domains/shopping-list-items/utils/item-totals";
+import { Progress } from "~/shared/components/ui/progress";
 import { formatCurrency } from "~/shared/lib/utils";
 
 interface ListTotalsSummaryProps {
@@ -14,7 +14,7 @@ export function ListTotalsSummary({ items }: ListTotalsSummaryProps) {
 	return (
 		<div className="mb-6 flex flex-col gap-4 rounded-lg border bg-card px-4 py-4 sm:flex-row sm:items-center sm:gap-6 sm:px-6 sm:py-5">
 			<div className="flex-1">
-				<div className="mb-2 flex flex-wrap justify-between gap-1 text-xs font-medium text-muted-foreground">
+				<div className="mb-2 flex flex-wrap justify-between gap-1 font-medium text-muted-foreground text-xs">
 					<span>
 						<span className="font-semibold text-foreground">
 							{totals.checkedCount}
@@ -30,19 +30,19 @@ export function ListTotalsSummary({ items }: ListTotalsSummaryProps) {
 
 			<div className="grid grid-cols-2 gap-4 border-t pt-4 sm:contents">
 				<div className="sm:border-l sm:pl-5 sm:text-right">
-					<div className="text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
+					<div className="font-semibold text-[11px] text-muted-foreground/70 uppercase tracking-wide">
 						Total da compra
 					</div>
-					<div className="mt-0.5 text-lg font-bold sm:text-xl">
+					<div className="mt-0.5 font-bold text-lg sm:text-xl">
 						{formatCurrency(totals.purchasedTotal)}
 					</div>
 				</div>
 
 				<div className="sm:border-l sm:pl-5 sm:text-right">
-					<div className="text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
+					<div className="font-semibold text-[11px] text-muted-foreground/70 uppercase tracking-wide">
 						Total estimado
 					</div>
-					<div className="mt-0.5 text-base font-semibold text-muted-foreground sm:text-lg">
+					<div className="mt-0.5 font-semibold text-base text-muted-foreground sm:text-lg">
 						{formatCurrency(totals.estimatedTotal)}
 					</div>
 				</div>
