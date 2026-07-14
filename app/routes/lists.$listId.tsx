@@ -13,10 +13,12 @@ import {
 	itemFormSchema,
 	ListTotalsSummary,
 	reorderItems,
+	setAllItemsStatus,
 	setItemStatus,
 	updateItem,
 	useDeleteItem,
 	useReorderItems,
+	useSetAllItemsStatus,
 	useToggleItemStatus,
 } from "~/domains/shopping-list-items";
 import {
@@ -32,7 +34,9 @@ import {
 } from "~/domains/shopping-lists";
 import { getBudgetStatus } from "~/domains/shopping-lists/utils/budget-status";
 import {
+	Check,
 	ChevronLeft,
+	Circle,
 	DotIcon,
 	MoreVertical,
 	Pencil,
@@ -44,6 +48,7 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/shared/components/ui/dropdown-menu";
 import { readStorage, serializeStorage } from "~/shared/lib/storage.server";
@@ -139,6 +144,16 @@ export async function action({ request, params }: Route.ActionArgs) {
 			});
 			return data(null, { headers });
 		}
+		case "set-all-status": {
+			const status = String(
+				formData.get("status") ?? "unchecked",
+			) as ItemStatus;
+			const next = setAllItemsStatus(storage, listId, status);
+			const headers = new Headers({
+				"Set-Cookie": await serializeStorage(next),
+			});
+			return data(null, { headers });
+		}
 		default:
 			return null;
 	}
@@ -150,6 +165,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const { deleteItem: submitDeleteItem } = useDeleteItem();
 	const { setItemStatus: submitStatus } = useToggleItemStatus();
 	const { reorderItems: submitReorder } = useReorderItems();
+	const { setAllItemsStatus: submitAllStatus } = useSetAllItemsStatus();
 	const { deleteShoppingList: deleteList } = useDeleteShoppingList();
 
 	const [isEditOpen, setEditOpen] = useState(false);
@@ -228,6 +244,21 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 						}
 					/>
 					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							disabled={list.items.length === 0}
+							onClick={() => submitAllStatus("checked")}
+						>
+							<Check className="size-3.5" />
+							Marcar todos como comprados
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							disabled={list.items.length === 0}
+							onClick={() => submitAllStatus("unchecked")}
+						>
+							<Circle className="size-3.5" />
+							Desmarcar todos
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={() => setEditOpen(true)}>
 							<Pencil className="size-3.5" />
 							Editar lista

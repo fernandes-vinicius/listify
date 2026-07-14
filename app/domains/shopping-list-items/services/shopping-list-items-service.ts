@@ -126,6 +126,23 @@ export function setItemStatus(
 	};
 }
 
+// Marca/desmarca todos os itens da lista de uma vez (ex: "Desmarcar todos"
+// pra reaproveitar a lista numa próxima compra, ou "Marcar todos como
+// comprados"). Afeta todo item da lista, independente do status atual.
+export function setAllItemsStatus(
+	storage: StorageShape,
+	listId: string,
+	status: ItemStatus,
+): StorageShape {
+	return {
+		lists: storage.lists.map((list) =>
+			list.id !== listId
+				? list
+				: { ...list, items: list.items.map((item) => ({ ...item, status })) },
+		),
+	};
+}
+
 // Recebe a ordem de um subconjunto de itens (ex.: só os "pendentes") e
 // atualiza apenas o `order` desses itens — os demais permanecem intactos,
 // para não perder itens "comprados"/"tenho em casa" fora do subconjunto.

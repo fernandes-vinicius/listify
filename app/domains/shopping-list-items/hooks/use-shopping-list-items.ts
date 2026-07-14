@@ -41,3 +41,13 @@ export function useReorderItems() {
 
 	return { reorderItems };
 }
+
+export function useSetAllItemsStatus() {
+	const fetcher = useFetcher();
+
+	function setAllItemsStatus(status: ItemStatus) {
+		fetcher.submit({ intent: "set-all-status", status }, { method: "post" });
+	}
+
+	return { setAllItemsStatus, isSubmitting: fetcher.state !== "idle" };
+}

@@ -54,6 +54,7 @@ export function ItemPriceEditDrawer({
 	const total = quantityNumber * price;
 	const canSubmit = quantityNumber > 0;
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 	useEffect(() => {
 		if (fetcher.data && !fetcher.data.error) {
 			onOpenChange(false);
@@ -66,7 +67,7 @@ export function ItemPriceEditDrawer({
 			<SheetContent
 				side="bottom"
 				initialFocus={priceInputRef}
-				className="mx-auto flex w-full max-w-xl flex-col rounded-t-xl sm:min-h-auto"
+				className="mx-auto flex w-full max-w-xl flex-col rounded-t-2xl sm:min-h-auto"
 			>
 				<fetcher.Form method="post" className="flex min-h-0 flex-1 flex-col">
 					<input type="hidden" name="intent" value="edit-item" />
@@ -99,7 +100,7 @@ export function ItemPriceEditDrawer({
 					</SheetHeader>
 
 					<div className="flex flex-col gap-4 p-4">
-						<div className="grid grid-cols-2 gap-2 sm:gap-3">
+						<div className="grid w-full grid-cols-3 items-center gap-2 sm:gap-6">
 							<Field>
 								<FieldLabel htmlFor="price-edit-quantity">
 									Quantidade
@@ -123,14 +124,13 @@ export function ItemPriceEditDrawer({
 									onValueChange={setPrice}
 								/>
 							</Field>
+							<Field className="pl-6">
+								<Label className="text-right">Total</Label>
+								<div className="inline-flex h-9 items-center py-1 leading-none">
+									{formatCurrency(total)}
+								</div>
+							</Field>
 						</div>
-
-						<Field>
-							<Label>Total</Label>
-							<div className="rounded-md border bg-muted px-3 py-2 font-bold text-sm">
-								{formatCurrency(total)}
-							</div>
-						</Field>
 
 						{fetcher.data?.error && (
 							<p className="text-destructive text-xs">
@@ -139,7 +139,7 @@ export function ItemPriceEditDrawer({
 						)}
 					</div>
 
-					<SheetFooter className="border-t p-4">
+					<SheetFooter className="p-4">
 						<Button type="submit" disabled={submitting || !canSubmit}>
 							{submitting ? "Salvando…" : "Salvar"}
 						</Button>
