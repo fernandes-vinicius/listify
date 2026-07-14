@@ -115,7 +115,10 @@ export function ItemFormDrawer({
 								value={name}
 								onChange={(event) => setName(event.target.value)}
 								placeholder="Ex: Leite"
-								autoFocus
+								autoCapitalize="none"
+								autoCorrect="off"
+								spellCheck={false}
+								// autoFocus
 							/>
 						</div>
 
@@ -136,6 +139,9 @@ export function ItemFormDrawer({
 									value={unit}
 									onChange={(event) => setUnit(event.target.value)}
 									placeholder="kg, un, L"
+									autoCapitalize="none"
+									autoCorrect="off"
+									spellCheck={false}
 								/>
 							</div>
 							<div className="space-y-1.5">
