@@ -93,9 +93,13 @@ export function ItemFormDrawer({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
-				className="mx-auto flex max-h-[85vh] w-full max-w-xl flex-col rounded-t-xl"
+				className="mx-auto flex min-h-[95vh] w-full max-w-xl flex-col rounded-t-xl"
 			>
-				<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+				<form
+					onSubmit={handleSubmit}
+					autoComplete="off"
+					className="flex min-h-0 flex-1 flex-col"
+				>
 					<SheetHeader className="p-4 text-center">
 						<SheetTitle>
 							{mode === "add" ? "Adicionar item" : "Editar item"}
@@ -114,7 +118,7 @@ export function ItemFormDrawer({
 								id="item-name"
 								value={name}
 								onChange={(event) => setName(event.target.value)}
-								placeholder="Ex: Leite"
+								placeholder="Ex: leite"
 								autoCapitalize="none"
 								autoCorrect="off"
 								spellCheck={false}

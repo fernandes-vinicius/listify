@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import { CurrencyInput } from "~/shared/components/currency-input";
 import { Button } from "~/shared/components/ui/button";
 import { Input } from "~/shared/components/ui/input";
@@ -48,7 +48,7 @@ export function ListFormDialog({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
-				className="mx-auto flex max-h-[85vh] w-full max-w-xl flex-col rounded-t-xl"
+				className="mx-auto flex min-h-[95vh] w-full max-w-xl flex-col rounded-t-xl"
 			>
 				<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
 					<SheetHeader className="p-4 text-center">
@@ -81,7 +81,7 @@ export function ListFormDialog({
 								value={budget}
 								onValueChange={setBudget}
 							/>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-muted-foreground text-xs">
 								Valor máximo que você pretende gastar nessa lista. Deixe em R$
 								0,00 para não definir um orçamento.
 							</p>
