@@ -1,3 +1,4 @@
+import { parseWithZod } from "@conform-to/zod";
 import { useState } from "react";
 import { redirect } from "react-router";
 
@@ -8,11 +9,10 @@ import {
 	getShoppingLists,
 	ListCard,
 	ListFormDialog,
+	shoppingListFormSchema,
 	type ShoppingList,
 	updateShoppingList,
-	useCreateShoppingList,
 	useDeleteShoppingList,
-	useUpdateShoppingList,
 } from "~/domains/shopping-lists";
 import { Plus, ShoppingBasket } from "~/shared/components/icons";
 import { Button } from "~/shared/components/ui/button";
@@ -27,31 +27,32 @@ export async function clientLoader() {
 	return { lists: getShoppingLists() };
 }
 
-function parseBudget(formData: FormData): number | null {
-	const raw = String(formData.get("budget") ?? "");
-	if (!raw) return null;
-	const value = Number(raw);
-	return Number.isFinite(value) && value > 0 ? value : null;
-}
-
 export async function clientAction({ request }: Route.ClientActionArgs) {
 	const formData = await request.formData();
 	const intent = formData.get("intent");
 
 	switch (intent) {
 		case "create-list": {
-			const name = String(formData.get("name") ?? "").trim();
-			if (!name) return null;
-			const list = createShoppingList(name, parseBudget(formData));
+			const submission = parseWithZod(formData, {
+				schema: shoppingListFormSchema,
+			});
+			if (submission.status !== "success") return submission.reply();
+
+			const list = createShoppingList(
+				submission.value.name,
+				submission.value.budget,
+			);
 			return redirect(`/lists/${list.id}`);
 		}
 		case "update-list": {
+			const submission = parseWithZod(formData, {
+				schema: shoppingListFormSchema,
+			});
+			if (submission.status !== "success") return submission.reply();
+
 			const id = String(formData.get("id") ?? "");
-			const name = String(formData.get("name") ?? "").trim();
-			if (id && name) {
-				updateShoppingList(id, { name, budget: parseBudget(formData) });
-			}
-			return null;
+			if (id) updateShoppingList(id, submission.value);
+			return submission.reply();
 		}
 		case "delete-list": {
 			const id = String(formData.get("id") ?? "");
@@ -65,8 +66,6 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
 	const { lists } = loaderData;
-	const createList = useCreateShoppingList();
-	const { updateShoppingList: updateList } = useUpdateShoppingList();
 	const { deleteShoppingList: deleteList } = useDeleteShoppingList();
 
 	const [isCreateOpen, setCreateOpen] = useState(false);
@@ -132,7 +131,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 				open={isCreateOpen}
 				onOpenChange={setCreateOpen}
 				mode="create"
-				onSubmit={(name, budget) => createList(name, budget)}
 			/>
 
 			{editingList && (
@@ -141,9 +139,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 					open
 					onOpenChange={(open) => !open && setEditingList(null)}
 					mode="edit"
+					listId={editingList.id}
 					initialName={editingList.name}
 					initialBudget={editingList.budget}
-					onSubmit={(name, budget) => updateList(editingList.id, name, budget)}
 				/>
 			)}
 

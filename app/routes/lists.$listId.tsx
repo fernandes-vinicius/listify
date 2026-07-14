@@ -1,3 +1,4 @@
+import { parseWithZod } from "@conform-to/zod";
 import { DotIcon } from "lucide-react";
 import { useState } from "react";
 import { Link, redirect } from "react-router";
@@ -6,17 +7,16 @@ import {
 	deleteItem,
 	getListTotals,
 	ItemFormDrawer,
+	itemFormSchema,
 	ItemSection,
 	type ItemStatus,
 	ListTotalsSummary,
 	reorderItems,
 	setItemStatus,
 	updateItem,
-	useAddItem,
 	useDeleteItem,
 	useReorderItems,
 	useToggleItemStatus,
-	useUpdateItem,
 } from "~/domains/shopping-list-items";
 import {
 	BudgetAlert,
@@ -24,9 +24,9 @@ import {
 	deleteShoppingList,
 	getShoppingListById,
 	ListFormDialog,
+	shoppingListFormSchema,
 	updateShoppingList,
 	useDeleteShoppingList,
-	useUpdateShoppingList,
 } from "~/domains/shopping-lists";
 import { getBudgetStatus } from "~/domains/shopping-lists/utils/budget-status";
 import {
@@ -58,13 +58,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	return { list };
 }
 
-function parseBudget(formData: FormData): number | null {
-	const raw = String(formData.get("budget") ?? "");
-	if (!raw) return null;
-	const value = Number(raw);
-	return Number.isFinite(value) && value > 0 ? value : null;
-}
-
 export async function clientAction({
 	request,
 	params,
@@ -75,34 +68,32 @@ export async function clientAction({
 
 	switch (intent) {
 		case "update-list": {
-			const name = String(formData.get("name") ?? "").trim();
-			if (name)
-				updateShoppingList(listId, { name, budget: parseBudget(formData) });
-			return null;
+			const submission = parseWithZod(formData, {
+				schema: shoppingListFormSchema,
+			});
+			if (submission.status !== "success") return submission.reply();
+
+			updateShoppingList(listId, submission.value);
+			return submission.reply();
 		}
 		case "delete-list": {
 			deleteShoppingList(listId);
 			return redirect("/");
 		}
 		case "add-item": {
-			addItem(listId, {
-				name: String(formData.get("name") ?? ""),
-				quantity: Number(formData.get("quantity") ?? 0),
-				unit: String(formData.get("unit") ?? ""),
-				price: Number(formData.get("price") ?? 0),
-			});
-			return null;
+			const submission = parseWithZod(formData, { schema: itemFormSchema });
+			if (submission.status !== "success") return submission.reply();
+
+			addItem(listId, submission.value);
+			return submission.reply({ resetForm: true });
 		}
 		case "edit-item": {
+			const submission = parseWithZod(formData, { schema: itemFormSchema });
+			if (submission.status !== "success") return submission.reply();
+
 			const itemId = String(formData.get("itemId") ?? "");
-			updateItem(listId, itemId, {
-				name: String(formData.get("name") ?? ""),
-				quantity: Number(formData.get("quantity") ?? 0),
-				unit: String(formData.get("unit") ?? ""),
-				price: Number(formData.get("price") ?? 0),
-				status: String(formData.get("status") ?? "unchecked") as ItemStatus,
-			});
-			return null;
+			updateItem(listId, itemId, submission.value);
+			return submission.reply();
 		}
 		case "delete-item": {
 			deleteItem(listId, String(formData.get("itemId") ?? ""));
@@ -131,18 +122,23 @@ export async function clientAction({
 export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const { list } = loaderData;
 
-	const { addItem: submitAddItem } = useAddItem();
-	const { updateItem: submitUpdateItem } = useUpdateItem();
 	const { deleteItem: submitDeleteItem } = useDeleteItem();
 	const { setItemStatus: submitStatus } = useToggleItemStatus();
 	const { reorderItems: submitReorder } = useReorderItems();
-	const { updateShoppingList: updateList } = useUpdateShoppingList();
 	const { deleteShoppingList: deleteList } = useDeleteShoppingList();
 
 	const [isEditOpen, setEditOpen] = useState(false);
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
 	const [isAddOpen, setAddOpen] = useState(false);
 	const [editingItemId, setEditingItemId] = useState<string | null>(null);
+	const [editFocusField, setEditFocusField] = useState<"price" | undefined>(
+		undefined,
+	);
+
+	function handleEditItem(itemId: string, focusField?: "price") {
+		setEditingItemId(itemId);
+		setEditFocusField(focusField);
+	}
 
 	const sortedItems = [...list.items].sort((a, b) => a.order - b.order);
 	const uncheckedItems = sortedItems.filter(
@@ -247,19 +243,19 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 						sortable
 						onReorder={(itemIds) => submitReorder(itemIds)}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
-						onEditItem={(itemId) => setEditingItemId(itemId)}
+						onEditItem={handleEditItem}
 					/>
 					<ItemSection
 						status="checked"
 						items={checkedItems}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
-						onEditItem={(itemId) => setEditingItemId(itemId)}
+						onEditItem={handleEditItem}
 					/>
 					<ItemSection
 						status="have_at_home"
 						items={homeItems}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
-						onEditItem={(itemId) => setEditingItemId(itemId)}
+						onEditItem={handleEditItem}
 					/>
 				</>
 			)}
@@ -269,18 +265,23 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 				onOpenChange={setAddOpen}
 				mode="add"
 				listName={list.name}
-				onSubmit={(values) => submitAddItem(values)}
 			/>
 
 			{editingItem && (
 				<ItemFormDrawer
 					key={editingItem.id}
 					open
-					onOpenChange={(open) => !open && setEditingItemId(null)}
+					onOpenChange={(open) => {
+						if (!open) {
+							setEditingItemId(null);
+							setEditFocusField(undefined);
+						}
+					}}
 					mode="edit"
 					listName={list.name}
+					itemId={editingItem.id}
 					initialValues={editingItem}
-					onSubmit={(values) => submitUpdateItem(editingItem.id, values)}
+					focusField={editFocusField}
 					onDelete={() => {
 						submitDeleteItem(editingItem.id);
 						setEditingItemId(null);
@@ -293,9 +294,9 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 					open={isEditOpen}
 					onOpenChange={setEditOpen}
 					mode="edit"
+					listId={list.id}
 					initialName={list.name}
 					initialBudget={list.budget}
-					onSubmit={(name, budget) => updateList(list.id, name, budget)}
 				/>
 			)}
 

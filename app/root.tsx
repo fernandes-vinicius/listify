@@ -7,9 +7,16 @@ import {
 	ScrollRestoration,
 } from "react-router";
 
+import { InstallPrompt } from "~/shared/components/pwa/install-prompt";
+import { RegisterPWA } from "~/shared/components/pwa/register-pwa";
 import type { Route } from "./+types/root";
 import { AppProviders } from "./providers/app-providers";
 import "./app.css";
+
+export const links: Route.LinksFunction = () => [
+	{ rel: "manifest", href: "/manifest.webmanifest" },
+	{ rel: "apple-touch-icon", href: "/apple-touch-icon-180x180.png" },
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
@@ -17,11 +24,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<meta name="theme-color" content="#0d9488" />
+				<meta name="mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+				<meta name="apple-mobile-web-app-title" content="Listify" />
 				<Meta />
 				<Links />
 			</head>
 			<body>
 				{children}
+				<RegisterPWA />
+				<InstallPrompt />
 				<ScrollRestoration />
 				<Scripts />
 			</body>

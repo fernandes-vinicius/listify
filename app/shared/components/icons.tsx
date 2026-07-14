@@ -8,6 +8,8 @@ export {
 	MoreVertical,
 	X,
 	GripVertical,
+	Download,
+	Share,
 	// Status
 	Check,
 	Home,

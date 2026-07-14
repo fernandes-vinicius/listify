@@ -19,7 +19,7 @@ interface ItemRowProps {
 	dragHandleAttributes?: DraggableAttributes;
 	dragHandleListeners?: DraggableSyntheticListeners;
 	onStatusChange: (status: ItemStatus) => void;
-	onEdit: () => void;
+	onEdit: (focusField?: "price") => void;
 }
 
 export function ItemRow({
@@ -34,7 +34,7 @@ export function ItemRow({
 		<div
 			role="button"
 			tabIndex={0}
-			onClick={onEdit}
+			onClick={() => onEdit()}
 			onKeyDown={(event) => {
 				if (event.key === "Enter") onEdit();
 			}}
@@ -76,7 +76,14 @@ export function ItemRow({
 				</Badge>
 			</div>
 
-			<div className="flex shrink-0 items-baseline gap-2 sm:gap-3.5">
+			<button
+				type="button"
+				onClick={(event) => {
+					event.stopPropagation();
+					onEdit("price");
+				}}
+				className="flex shrink-0 items-baseline gap-2 rounded-sm sm:gap-3.5"
+			>
 				<span
 					className={cn(
 						"hidden text-right text-xs text-muted-foreground/70 sm:inline-block sm:w-14",
@@ -88,7 +95,7 @@ export function ItemRow({
 				<span className="text-right text-sm font-bold sm:w-18">
 					{formatCurrency(getItemTotal(item))}
 				</span>
-			</div>
+			</button>
 		</div>
 	);
 }

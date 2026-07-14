@@ -1,8 +1,18 @@
-import { type FormEvent, useState } from "react";
+import { getFormProps, getInputProps, useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod";
+import { useEffect, useRef, useState } from "react";
+import { useFetcher } from "react-router";
+import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 import { CurrencyInput } from "~/shared/components/currency-input";
 import { Check, Home, Plus, Trash2 } from "~/shared/components/icons";
 import { Button } from "~/shared/components/ui/button";
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from "~/shared/components/ui/field";
 import { Input } from "~/shared/components/ui/input";
 import { Label } from "~/shared/components/ui/label";
 import {
@@ -19,7 +29,7 @@ function parseNumber(raw: string): number {
 	return Number(raw.replace(",", ".")) || 0;
 }
 
-export interface ItemFormValues {
+export interface ItemFormInitialValues {
 	name: string;
 	quantity: number;
 	unit: string;
@@ -32,9 +42,13 @@ interface ItemFormDrawerProps {
 	onOpenChange: (open: boolean) => void;
 	mode: "add" | "edit";
 	listName: string;
-	initialValues?: ItemFormValues;
-	onSubmit: (values: ItemFormValues) => void;
+	itemId?: string;
+	initialValues?: ItemFormInitialValues;
 	onDelete?: () => void;
+	// Quando "price", o Sheet abre com foco já no campo de preço (ex: usuário
+	// clicou em cima do preço na linha do item) em vez do foco padrão no
+	// primeiro campo — e quando ausente, não foca nenhum campo automaticamente.
+	focusField?: "price";
 }
 
 const STATUS_OPTIONS: { status: ItemStatus; label: string }[] = [
@@ -48,58 +62,95 @@ export function ItemFormDrawer({
 	onOpenChange,
 	mode,
 	listName,
+	itemId,
 	initialValues,
-	onSubmit,
 	onDelete,
+	focusField,
 }: ItemFormDrawerProps) {
-	const [name, setName] = useState(initialValues?.name ?? "");
-	const [quantity, setQuantity] = useState(
+	const fetcher = useFetcher();
+	const priceInputRef = useRef<HTMLInputElement>(null);
+
+	const [form, fields] = useForm({
+		lastResult: fetcher.data,
+		shouldRevalidate: "onBlur",
+		defaultValue: {
+			name: initialValues?.name ?? "",
+			quantity: String(initialValues?.quantity ?? 1),
+			unit: initialValues?.unit ?? "",
+		},
+		onValidate({ formData }) {
+			return parseWithZod(formData, { schema: itemFormSchema });
+		},
+	});
+
+	// Preço e status são widgets customizados (máscara monetária, seletor de
+	// pílulas) — geridos como estado React simples em vez de via Conform's
+	// `useInputControl`. O `useInputControl` depende de localizar o `<form>`
+	// no DOM para sincronizar o valor num input hidden gerenciado por ele;
+	// nesse app (Sheet sempre montado mas fechado, `fetcher.Form` client-side)
+	// essa sincronização se mostrou não confiável e chegou a submeter preço
+	// zerado mesmo com o valor certo digitado. Estado local + input hidden
+	// controlado por nós evita essa dependência frágil.
+	const [quantityRaw, setQuantityRaw] = useState(
 		String(initialValues?.quantity ?? 1),
 	);
-	const [unit, setUnit] = useState(initialValues?.unit ?? "");
 	const [price, setPrice] = useState(initialValues?.price ?? 0);
 	const [status, setStatus] = useState<ItemStatus>(
 		initialValues?.status ?? "unchecked",
 	);
+	const submitting = fetcher.state !== "idle";
 
-	const quantityNumber = parseNumber(quantity);
-	const total = quantityNumber * price;
-	const canSubmit = name.trim().length > 0 && quantityNumber > 0;
+	const total = parseNumber(quantityRaw) * price;
 
-	function handleSubmit(event: FormEvent) {
-		event.preventDefault();
-		if (!canSubmit) return;
-
-		onSubmit({
-			name: name.trim(),
-			quantity: quantityNumber,
-			unit: unit.trim(),
-			price,
-			status,
-		});
+	// "Adicionar" permanece aberto pra permitir cadastrar vários itens em
+	// sequência — os campos geridos pelo Conform resetam sozinhos (via
+	// `resetForm` no clientAction), então só precisamos resetar os campos de
+	// estado local aqui. "Editar" fecha o Sheet ao ver um `lastResult` de
+	// sucesso.
+	//
+	// `submission.reply({ resetForm: true })` (usado no "adicionar") retorna
+	// `{ initialValue: null }` sem nenhum campo `status` — só o reply comum de
+	// erro tem `error` preenchido — então "sem erro" é o sinal de sucesso, não
+	// `status === "success"`.
+	useEffect(() => {
+		if (!fetcher.data || fetcher.data.error) return;
 
 		if (mode === "edit") {
 			onOpenChange(false);
 		} else {
-			// reset form state
-			setName("");
-			setQuantity("");
-			setUnit("");
+			setQuantityRaw("1");
 			setPrice(0);
 		}
-	}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [fetcher.data]);
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
+				// Sem `focusField`, não foca nenhum campo automaticamente (em vez do
+				// padrão do Dialog de focar o primeiro elemento focável). Com
+				// `focusField="price"` (usuário clicou no preço da linha), foca
+				// direto o input de preço, pronto pra alterar.
+				initialFocus={focusField === "price" ? priceInputRef : false}
 				className="mx-auto flex min-h-[96%] w-full max-w-xl flex-col rounded-t-xl sm:min-h-auto"
 			>
-				<form
-					onSubmit={handleSubmit}
+				<fetcher.Form
+					method="post"
+					{...getFormProps(form)}
 					autoComplete="off"
 					className="flex min-h-0 flex-1 flex-col"
 				>
+					<input
+						type="hidden"
+						name="intent"
+						value={mode === "add" ? "add-item" : "edit-item"}
+					/>
+					{mode === "edit" && (
+						<input type="hidden" name="itemId" value={itemId} />
+					)}
+					<input type="hidden" name="status" value={status} readOnly />
+
 					<SheetHeader className="p-4 text-center">
 						<SheetTitle>
 							{mode === "add" ? "Adicionar item" : "Editar item"}
@@ -111,62 +162,62 @@ export function ItemFormDrawer({
 						</SheetDescription>
 					</SheetHeader>
 
-					<div className="flex flex-col gap-4 overflow-y-auto p-4">
-						<div className="space-y-1.5">
-							<Label htmlFor="item-name">Nome</Label>
+					<FieldGroup className="overflow-y-auto p-4">
+						<Field>
+							<FieldLabel htmlFor={fields.name.id}>Nome</FieldLabel>
 							<Input
-								id="item-name"
-								value={name}
-								onChange={(event) => setName(event.target.value)}
+								{...getInputProps(fields.name, { type: "text" })}
 								placeholder="Ex: leite"
 								autoCapitalize="none"
 								autoCorrect="off"
 								spellCheck={false}
-								// autoFocus
 							/>
-						</div>
+							<FieldError>{fields.name.errors?.[0]}</FieldError>
+						</Field>
 
 						<div className="grid grid-cols-3 gap-2 sm:gap-3">
-							<div className="space-y-1.5">
-								<Label htmlFor="item-quantity">Quantidade</Label>
+							<Field>
+								<FieldLabel htmlFor={fields.quantity.id}>Quantidade</FieldLabel>
 								<Input
-									id="item-quantity"
+									{...getInputProps(fields.quantity, { type: "text" })}
 									inputMode="decimal"
-									value={quantity}
-									onChange={(event) => setQuantity(event.target.value)}
+									onChange={(event) => setQuantityRaw(event.target.value)}
 								/>
-							</div>
-							<div className="space-y-1.5">
-								<Label htmlFor="item-unit">Unidade</Label>
+								<FieldError>{fields.quantity.errors?.[0]}</FieldError>
+							</Field>
+							<Field>
+								<FieldLabel htmlFor={fields.unit.id}>Unidade</FieldLabel>
 								<Input
-									id="item-unit"
-									value={unit}
-									onChange={(event) => setUnit(event.target.value)}
+									{...getInputProps(fields.unit, { type: "text" })}
 									placeholder="kg, un, L"
 									autoCapitalize="none"
 									autoCorrect="off"
 									spellCheck={false}
 								/>
-							</div>
-							<div className="space-y-1.5">
-								<Label htmlFor="item-price">Preço unitário</Label>
+								<FieldError>{fields.unit.errors?.[0]}</FieldError>
+							</Field>
+							<Field>
+								<FieldLabel htmlFor="item-price">Preço unitário</FieldLabel>
+								<input type="hidden" name="price" value={price} readOnly />
 								<CurrencyInput
+									ref={priceInputRef}
 									id="item-price"
 									value={price}
 									onValueChange={setPrice}
 								/>
-							</div>
+								<FieldError>{fields.price.errors?.[0]}</FieldError>
+							</Field>
 						</div>
 
-						<div className="space-y-1.5">
+						<Field>
 							<Label>Total</Label>
 							<div className="rounded-md border bg-muted px-3 py-2 font-bold text-sm">
 								{formatCurrency(total)}
 							</div>
-						</div>
+						</Field>
 
 						{mode === "edit" && (
-							<div className="space-y-2">
+							<Field>
 								<Label>Status</Label>
 								<div className="grid grid-cols-3 gap-2">
 									{STATUS_OPTIONS.map((option) => {
@@ -229,9 +280,9 @@ export function ItemFormDrawer({
 										);
 									})}
 								</div>
-							</div>
+							</Field>
 						)}
-					</div>
+					</FieldGroup>
 
 					<SheetFooter className="flex-col-reverse gap-2 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
 						{mode === "edit" && onDelete ? (
@@ -249,20 +300,22 @@ export function ItemFormDrawer({
 						)}
 						<Button
 							type="submit"
-							disabled={!canSubmit}
+							disabled={submitting}
 							className={mode === "add" ? "w-full" : "w-full sm:w-auto"}
 						>
 							{mode === "add" ? (
 								<>
 									<Plus className="size-4" />
-									Adicionar item
+									{submitting ? "Adicionando…" : "Adicionar item"}
 								</>
+							) : submitting ? (
+								"Salvando…"
 							) : (
 								"Salvar alterações"
 							)}
 						</Button>
 					</SheetFooter>
-				</form>
+				</fetcher.Form>
 			</SheetContent>
 		</Sheet>
 	);

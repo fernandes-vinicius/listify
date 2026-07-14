@@ -1,4 +1,8 @@
 export type { ShoppingList } from "~/domains/shopping-lists/types/shopping-list-types";
+export {
+	shoppingListFormSchema,
+	type ShoppingListFormValues,
+} from "~/domains/shopping-lists/schemas/shopping-list-schema";
 
 export {
 	getShoppingLists,
@@ -9,11 +13,7 @@ export {
 	type UpdateShoppingListInput,
 } from "~/domains/shopping-lists/services/shopping-lists-service";
 
-export {
-	useCreateShoppingList,
-	useUpdateShoppingList,
-	useDeleteShoppingList,
-} from "~/domains/shopping-lists/hooks/use-shopping-lists";
+export { useDeleteShoppingList } from "~/domains/shopping-lists/hooks/use-shopping-lists";
 
 export { ListCard } from "~/domains/shopping-lists/components/list-card";
 export { ListFormDialog } from "~/domains/shopping-lists/components/list-form-dialog";

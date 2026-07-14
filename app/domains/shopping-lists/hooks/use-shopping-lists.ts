@@ -1,43 +1,15 @@
-import { useFetcher, useSubmit } from "react-router";
+import { useFetcher } from "react-router";
 
-// Cada rota que usa esses hooks (home e detalhe da lista) implementa o mesmo
+// Cada rota que usa esse hook (home e detalhe da lista) implementa o mesmo
 // conjunto de intents de lista no seu próprio clientAction. Submeter sem
 // `action` explícito manda para a rota atual — submeter para "/" a partir de
 // outra rota mira o layout "root" (sem clientAction) por causa da ambiguidade
 // entre rota index e layout no React Router.
-
-export function useCreateShoppingList() {
-	const submit = useSubmit();
-
-	return function createShoppingList(name: string, budget: number | null) {
-		submit(
-			{
-				intent: "create-list",
-				name,
-				budget: budget == null ? "" : String(budget),
-			},
-			{ method: "post" },
-		);
-	};
-}
-
-export function useUpdateShoppingList() {
-	const fetcher = useFetcher();
-
-	return {
-		updateShoppingList: (id: string, name: string, budget: number | null) =>
-			fetcher.submit(
-				{
-					intent: "update-list",
-					id,
-					name,
-					budget: budget == null ? "" : String(budget),
-				},
-				{ method: "post" },
-			),
-		isUpdating: fetcher.state !== "idle",
-	};
-}
+//
+// Criação e edição de lista são conduzidas pelo próprio `ListFormDialog` via
+// `fetcher.Form` + Conform (ver list-form-dialog.tsx), não por hooks
+// imperativos — Conform precisa que o form real submeta para receber de volta
+// o `lastResult` (erros de validação) no `fetcher.data`.
 
 export function useDeleteShoppingList() {
 	const fetcher = useFetcher();

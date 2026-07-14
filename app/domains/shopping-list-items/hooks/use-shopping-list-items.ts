@@ -1,55 +1,10 @@
 import { useFetcher } from "react-router";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 
-export interface ItemFormInput {
-	name: string;
-	quantity: number;
-	unit: string;
-	price: number;
-}
-
-export function useAddItem() {
-	const fetcher = useFetcher();
-
-	function addItem(input: ItemFormInput) {
-		fetcher.submit(
-			{
-				intent: "add-item",
-				name: input.name,
-				quantity: String(input.quantity),
-				unit: input.unit,
-				price: String(input.price),
-			},
-			{ method: "post" },
-		);
-	}
-
-	return { addItem, isSubmitting: fetcher.state !== "idle" };
-}
-
-export function useUpdateItem() {
-	const fetcher = useFetcher();
-
-	function updateItem(
-		itemId: string,
-		input: ItemFormInput & { status: ItemStatus },
-	) {
-		fetcher.submit(
-			{
-				intent: "edit-item",
-				itemId,
-				name: input.name,
-				quantity: String(input.quantity),
-				unit: input.unit,
-				price: String(input.price),
-				status: input.status,
-			},
-			{ method: "post" },
-		);
-	}
-
-	return { updateItem, isSubmitting: fetcher.state !== "idle" };
-}
+// Adicionar e editar item são conduzidos pelo próprio `ItemFormDrawer` via
+// `fetcher.Form` + Conform (ver item-form-drawer.tsx), não por hooks
+// imperativos — Conform precisa que o form real submeta para receber de volta
+// o `lastResult` (erros de validação) no `fetcher.data`.
 
 export function useDeleteItem() {
 	const fetcher = useFetcher();

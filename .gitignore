@@ -6,5 +6,8 @@ node_modules
 .react-router
 build
 
+# PWA dev service worker (vite-plugin-pwa devOptions)
+/dev-dist/
+
 # typescript
 *.tsbuildinfo
