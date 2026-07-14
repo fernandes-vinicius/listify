@@ -17,6 +17,7 @@ import {
 } from "~/domains/shopping-lists";
 import { Plus } from "~/shared/components/icons";
 import { Logo } from "~/shared/components/logo";
+import { ModeToggle } from "~/shared/components/mode-toggle";
 import { Button } from "~/shared/components/ui/button";
 import { readStorage, serializeStorage } from "~/shared/lib/storage.server";
 
@@ -91,7 +92,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<div className="container-wrapper">
-			<Logo className="mb-8 sm:mb-11" />
+			<div className="mb-8 flex items-center justify-between sm:mb-11">
+				<Logo />
+				<ModeToggle />
+			</div>
 
 			<div className="mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
 				<div>
@@ -108,7 +112,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 					onClick={() => setCreateOpen(true)}
 					className="w-full sm:w-auto"
 				>
-					<Plus className="size-4" />
+					<Plus />
 					Criar nova lista
 				</Button>
 			</div>

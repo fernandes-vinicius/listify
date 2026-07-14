@@ -85,19 +85,17 @@ export function ListCard({ list, onRename, onDelete }: ListCardProps) {
 				<Progress value={totals.progress} />
 			</CardContent>
 			{list.budget && (
-				<CardFooter
-					className={cn(
-						"mt-auto justify-between font-normal text-xs sm:flex-col sm:justify-center sm:text-center",
-						budgetStatus === "over" && "font-medium text-destructive",
-						budgetStatus === "close" &&
-							"font-medium text-amber-700 dark:text-amber-400",
-						budgetStatus === "ok" && "text-muted-foreground",
-					)}
-				>
+				<CardFooter className="mt-auto justify-between gap-1 text-muted-foreground text-xs sm:flex-col sm:text-center">
 					<span>Orçamento</span>
-					<span className="text-right sm:text-center">
+					<span
+						className={cn(
+							"text-foreground",
+							budgetStatus === "over" && "text-destructive",
+							budgetStatus === "close" && "text-amber-700 dark:text-amber-400",
+						)}
+					>
 						{formatCurrency(totals.estimatedTotal)}{" "}
-						<span className="text-muted-foreground/60">
+						<span className="text-muted-foreground">
 							/ {formatCurrency(list.budget)}
 						</span>
 					</span>
