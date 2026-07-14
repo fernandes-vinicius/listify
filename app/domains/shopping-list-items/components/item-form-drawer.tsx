@@ -78,7 +78,15 @@ export function ItemFormDrawer({
 			status,
 		});
 
-		if (mode === "edit") onOpenChange(false);
+		if (mode === "edit") {
+			onOpenChange(false);
+		} else {
+			// reset form state
+			setName("");
+			setQuantity("");
+			setUnit("");
+			setPrice(0);
+		}
 	}
 
 	return (

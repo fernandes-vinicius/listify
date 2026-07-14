@@ -1,6 +1,6 @@
+import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 import { Check, Home } from "~/shared/components/icons";
 import { cn } from "~/shared/lib/utils";
-import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 
 const NEXT_STATUS: Record<ItemStatus, ItemStatus> = {
 	unchecked: "checked",
