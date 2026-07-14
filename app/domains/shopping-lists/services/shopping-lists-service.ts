@@ -1,10 +1,10 @@
 import type { ShoppingList } from "~/domains/shopping-lists/types/shopping-list-types";
 import { createId } from "~/shared/lib/id";
 
-// Formato completo gravado no cookie (ver shared/lib/storage.server.ts) — a
+// Formato completo gravado no localStorage (ver shared/lib/storage.ts) — a
 // única "raiz" de dados do app. Funções aqui são puras: recebem o storage já
-// lido do cookie e devolvem o storage atualizado, sem tocar em cookie/request
-// diretamente — isso fica a cargo do loader/action de cada rota.
+// lido e devolvem o storage atualizado, sem tocar em localStorage diretamente
+// — isso fica a cargo do clientLoader/clientAction de cada rota.
 export interface AppStorage {
 	lists: ShoppingList[];
 }

@@ -1,6 +1,6 @@
 import { parseWithZod } from "@conform-to/zod";
 import { useState } from "react";
-import { data, redirect } from "react-router";
+import { redirect } from "react-router";
 
 import {
 	createShoppingList,
@@ -19,7 +19,7 @@ import { Plus } from "~/shared/components/icons";
 import { Logo } from "~/shared/components/logo";
 import { ModeToggle } from "~/shared/components/mode-toggle";
 import { Button } from "~/shared/components/ui/button";
-import { readStorage, serializeStorage } from "~/shared/lib/storage.server";
+import { readStorage, writeStorage } from "~/shared/lib/storage";
 
 import type { Route } from "./+types/_index";
 
@@ -27,13 +27,13 @@ export function meta() {
 	return [{ title: "Listify — Suas listas" }];
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-	const storage = await readStorage(request, EMPTY_STORAGE);
+export async function clientLoader() {
+	const storage = readStorage(EMPTY_STORAGE);
 	return { lists: getShoppingLists(storage) };
 }
 
-export async function action({ request }: Route.ActionArgs) {
-	const storage = await readStorage(request, EMPTY_STORAGE);
+export async function clientAction({ request }: Route.ClientActionArgs) {
+	const storage = readStorage(EMPTY_STORAGE);
 	const formData = await request.formData();
 	const intent = formData.get("intent");
 
@@ -49,10 +49,8 @@ export async function action({ request }: Route.ActionArgs) {
 				submission.value.name,
 				submission.value.budget,
 			);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return redirect(`/lists/${list.id}`, { headers });
+			writeStorage(next);
+			return redirect(`/lists/${list.id}`);
 		}
 		case "update-list": {
 			const submission = parseWithZod(formData, {
@@ -64,18 +62,14 @@ export async function action({ request }: Route.ActionArgs) {
 			const next = id
 				? updateShoppingList(storage, id, submission.value)
 				: storage;
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(submission.reply(), { headers });
+			writeStorage(next);
+			return submission.reply();
 		}
 		case "delete-list": {
 			const id = String(formData.get("id") ?? "");
 			const next = id ? deleteShoppingList(storage, id) : storage;
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(null, { headers });
+			writeStorage(next);
+			return null;
 		}
 		default:
 			return null;

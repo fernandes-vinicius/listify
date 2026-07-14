@@ -1,6 +1,6 @@
 import { parseWithZod } from "@conform-to/zod";
 import { useState } from "react";
-import { data, Link, redirect } from "react-router";
+import { Link, redirect } from "react-router";
 
 import {
 	addItem,
@@ -56,7 +56,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/shared/components/ui/dropdown-menu";
-import { readStorage, serializeStorage } from "~/shared/lib/storage.server";
+import { readStorage, writeStorage } from "~/shared/lib/storage";
 import { cn, formatCurrency } from "~/shared/lib/utils";
 import type { Route } from "./+types/lists.$listId";
 
@@ -66,16 +66,19 @@ export function meta({ loaderData }: Route.MetaArgs) {
 	];
 }
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-	const storage = await readStorage(request, EMPTY_STORAGE);
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+	const storage = readStorage(EMPTY_STORAGE);
 	const list = getShoppingListById(storage, params.listId);
 	if (!list) throw new Response("Lista não encontrada", { status: 404 });
 	return { list };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function clientAction({
+	request,
+	params,
+}: Route.ClientActionArgs) {
 	const listId = params.listId;
-	const storage = await readStorage(request, EMPTY_STORAGE);
+	const storage = readStorage(EMPTY_STORAGE);
 	const formData = await request.formData();
 	const intent = formData.get("intent");
 
@@ -87,27 +90,21 @@ export async function action({ request, params }: Route.ActionArgs) {
 			if (submission.status !== "success") return submission.reply();
 
 			const next = updateShoppingList(storage, listId, submission.value);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(submission.reply(), { headers });
+			writeStorage(next);
+			return submission.reply();
 		}
 		case "delete-list": {
 			const next = deleteShoppingList(storage, listId);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return redirect("/", { headers });
+			writeStorage(next);
+			return redirect("/");
 		}
 		case "add-item": {
 			const submission = parseWithZod(formData, { schema: itemFormSchema });
 			if (submission.status !== "success") return submission.reply();
 
 			const { storage: next } = addItem(storage, listId, submission.value);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(submission.reply({ resetForm: true }), { headers });
+			writeStorage(next);
+			return submission.reply({ resetForm: true });
 		}
 		case "edit-item": {
 			const submission = parseWithZod(formData, { schema: itemFormSchema });
@@ -115,18 +112,14 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 			const itemId = String(formData.get("itemId") ?? "");
 			const next = updateItem(storage, listId, itemId, submission.value);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(submission.reply(), { headers });
+			writeStorage(next);
+			return submission.reply();
 		}
 		case "delete-item": {
 			const itemId = String(formData.get("itemId") ?? "");
 			const next = deleteItem(storage, listId, itemId);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(null, { headers });
+			writeStorage(next);
+			return null;
 		}
 		case "toggle-status": {
 			const itemId = String(formData.get("itemId") ?? "");
@@ -134,38 +127,30 @@ export async function action({ request, params }: Route.ActionArgs) {
 				formData.get("status") ?? "unchecked",
 			) as ItemStatus;
 			const next = setItemStatus(storage, listId, itemId, status);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(null, { headers });
+			writeStorage(next);
+			return null;
 		}
 		case "reorder-items": {
 			const itemIds = JSON.parse(
 				String(formData.get("itemIds") ?? "[]"),
 			) as string[];
 			const next = reorderItems(storage, listId, itemIds);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(null, { headers });
+			writeStorage(next);
+			return null;
 		}
 		case "set-all-status": {
 			const status = String(
 				formData.get("status") ?? "unchecked",
 			) as ItemStatus;
 			const next = setAllItemsStatus(storage, listId, status);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(null, { headers });
+			writeStorage(next);
+			return null;
 		}
 		case "sort-items": {
 			const direction = formData.get("direction") === "desc" ? "desc" : "asc";
 			const next = sortItemsByName(storage, listId, direction);
-			const headers = new Headers({
-				"Set-Cookie": await serializeStorage(next),
-			});
-			return data(null, { headers });
+			writeStorage(next);
+			return null;
 		}
 		default:
 			return null;

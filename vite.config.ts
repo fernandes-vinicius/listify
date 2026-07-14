@@ -11,15 +11,14 @@ export default defineConfig({
 		VitePWA({
 			registerType: "autoUpdate",
 			outDir: "build/client",
-			// SSR (React Router renderiza cada navegação no servidor) não tem um
-			// index.html estático pro plugin injetar — o service worker é
-			// registrado manualmente a partir de um componente client (ver
-			// register-pwa.tsx).
+			// SPA mode (`ssr: false` em react-router.config.ts) não tem index.html
+			// próprio pro plugin injetar — o service worker é registrado
+			// manualmente a partir de um componente client (ver register-pwa.tsx).
 			injectRegister: null,
 			manifest: {
 				name: "Listify",
 				short_name: "Listify",
-				description: "Listify — suas listas de compras.",
+				description: "Listify — suas listas de compras, offline-first.",
 				lang: "pt-BR",
 				start_url: "/",
 				scope: "/",
@@ -45,29 +44,16 @@ export default defineConfig({
 				// instalação do PWA — excluídos aqui porque só quem usa o scanner de
 				// preço deve baixar esses ~4MB, via o runtimeCaching abaixo.
 				globIgnores: ["tesseract/**/*"],
-				// App SSR: nunca servir o shell de uma SPA em cache pra navegações de
-				// documento — deixa o servidor renderizar (ele lê o cookie de dados a
-				// cada request). Ver o runtimeCaching de navegação abaixo pra alguma
-				// resiliência offline em páginas já visitadas.
-				navigateFallback: null,
+				// App 100% client-side (dados em localStorage) — cachear o shell da
+				// SPA permite navegação completa offline, diferente de uma app SSR
+				// onde o HTML precisa vir do servidor a cada navegação.
+				navigateFallback: "/index.html",
 				cleanupOutdatedCaches: true,
 				clientsClaim: true,
+				// Assets do Tesseract.js (worker + core WASM + dados de idioma) não
+				// entram no precache — só quem usa o scanner de preço baixa esses
+				// ~9-10MB, e a partir daí ficam disponíveis offline via cache-first.
 				runtimeCaching: [
-					{
-						// Cacheia o HTML de navegações já visitadas (rede-primeiro, com
-						// timeout curto) — permite reabrir uma página recente mesmo
-						// offline, já que agora o HTML vem do servidor a cada acesso.
-						urlPattern: ({ request }) => request.mode === "navigate",
-						handler: "NetworkFirst",
-						options: {
-							cacheName: "pages",
-							networkTimeoutSeconds: 3,
-							expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
-						},
-					},
-					// Assets do Tesseract.js (worker + core WASM + dados de idioma) não
-					// entram no precache — só quem usa o scanner de preço baixa esses
-					// ~9-10MB, e a partir daí ficam disponíveis offline via cache-first.
 					{
 						urlPattern: /\/tesseract\//,
 						handler: "CacheFirst",

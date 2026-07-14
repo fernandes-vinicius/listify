@@ -8,9 +8,9 @@ import { createId } from "~/shared/lib/id";
 // cada lista, sem depender do tipo `ShoppingList` do domínio shopping-lists
 // (evita acoplamento circular entre os dois barrels) — `AppStorage` (de
 // shopping-lists-service.ts) é estruturalmente compatível e pode ser passado
-// direto aqui. Funções são puras: recebem o storage já lido do cookie e
-// devolvem o storage atualizado, sem tocar em cookie/request diretamente —
-// isso fica a cargo do loader/action de cada rota.
+// direto aqui. Funções são puras: recebem o storage já lido do localStorage e
+// devolvem o storage atualizado, sem tocar em localStorage diretamente —
+// isso fica a cargo do clientLoader/clientAction de cada rota.
 interface StorageList {
 	id: string;
 	items: ShoppingItem[];
