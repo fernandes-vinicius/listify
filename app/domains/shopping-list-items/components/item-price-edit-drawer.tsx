@@ -124,9 +124,9 @@ export function ItemPriceEditDrawer({
 									onValueChange={setPrice}
 								/>
 							</Field>
-							<Field className="pl-6">
+							<Field className="pt-1.5 pl-6">
 								<Label className="text-right">Total</Label>
-								<div className="inline-flex h-9 items-center py-1 leading-none">
+								<div className="inline-flex h-9 items-center py-1 text-base leading-none">
 									{formatCurrency(total)}
 								</div>
 							</Field>
