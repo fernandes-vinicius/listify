@@ -28,5 +28,9 @@ export {
 } from "~/domains/shopping-list-items/hooks/use-shopping-list-items";
 
 export { ItemSection } from "~/domains/shopping-list-items/components/item-section";
-export { ItemFormDrawer } from "~/domains/shopping-list-items/components/item-form-drawer";
+export {
+	ItemFormDrawer,
+	type ItemFormInitialValues,
+} from "~/domains/shopping-list-items/components/item-form-drawer";
+export { ItemPriceEditDrawer } from "~/domains/shopping-list-items/components/item-price-edit-drawer";
 export { ListTotalsSummary } from "~/domains/shopping-list-items/components/list-totals-summary";

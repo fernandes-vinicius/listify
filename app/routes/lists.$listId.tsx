@@ -7,6 +7,7 @@ import {
 	deleteItem,
 	getListTotals,
 	ItemFormDrawer,
+	ItemPriceEditDrawer,
 	ItemSection,
 	type ItemStatus,
 	itemFormSchema,
@@ -155,13 +156,11 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
 	const [isAddOpen, setAddOpen] = useState(false);
 	const [editingItemId, setEditingItemId] = useState<string | null>(null);
-	const [editFocusField, setEditFocusField] = useState<"price" | undefined>(
-		undefined,
-	);
+	const [editTarget, setEditTarget] = useState<"price" | undefined>(undefined);
 
-	function handleEditItem(itemId: string, focusField?: "price") {
+	function handleEditItem(itemId: string, target?: "price") {
 		setEditingItemId(itemId);
-		setEditFocusField(focusField);
+		setEditTarget(target);
 	}
 
 	const sortedItems = [...list.items].sort((a, b) => a.order - b.order);
@@ -294,27 +293,41 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 				listName={list.name}
 			/>
 
-			{editingItem && (
-				<ItemFormDrawer
-					key={editingItem.id}
-					open
-					onOpenChange={(open) => {
-						if (!open) {
+			{editingItem &&
+				(editTarget === "price" ? (
+					<ItemPriceEditDrawer
+						key={editingItem.id}
+						open
+						onOpenChange={(open) => {
+							if (!open) {
+								setEditingItemId(null);
+								setEditTarget(undefined);
+							}
+						}}
+						listName={list.name}
+						itemId={editingItem.id}
+						initialValues={editingItem}
+					/>
+				) : (
+					<ItemFormDrawer
+						key={editingItem.id}
+						open
+						onOpenChange={(open) => {
+							if (!open) {
+								setEditingItemId(null);
+								setEditTarget(undefined);
+							}
+						}}
+						mode="edit"
+						listName={list.name}
+						itemId={editingItem.id}
+						initialValues={editingItem}
+						onDelete={() => {
+							submitDeleteItem(editingItem.id);
 							setEditingItemId(null);
-							setEditFocusField(undefined);
-						}
-					}}
-					mode="edit"
-					listName={list.name}
-					itemId={editingItem.id}
-					initialValues={editingItem}
-					focusField={editFocusField}
-					onDelete={() => {
-						submitDeleteItem(editingItem.id);
-						setEditingItemId(null);
-					}}
-				/>
-			)}
+						}}
+					/>
+				))}
 
 			{isEditOpen && (
 				<ListFormDialog

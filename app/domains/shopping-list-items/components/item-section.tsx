@@ -24,7 +24,7 @@ interface ItemSectionProps {
 	sortable?: boolean;
 	onReorder?: (itemIds: string[]) => void;
 	onStatusChange: (itemId: string, status: ItemStatus) => void;
-	onEditItem: (itemId: string, focusField?: "price") => void;
+	onEditItem: (itemId: string, editTarget?: "price") => void;
 }
 
 export function ItemSection({
@@ -68,7 +68,7 @@ export function ItemSection({
 							key={item.id}
 							item={item}
 							onStatusChange={(next) => onStatusChange(item.id, next)}
-							onEdit={(focusField) => onEditItem(item.id, focusField)}
+							onEdit={(editTarget) => onEditItem(item.id, editTarget)}
 						/>
 					))
 				)}

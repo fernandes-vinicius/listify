@@ -24,7 +24,7 @@ interface SortableItemListProps {
 	items: ShoppingItem[];
 	onReorder: (itemIds: string[]) => void;
 	onStatusChange: (itemId: string, status: ItemStatus) => void;
-	onEditItem: (itemId: string, focusField?: "price") => void;
+	onEditItem: (itemId: string, editTarget?: "price") => void;
 }
 
 function SortableItemRow({
@@ -34,7 +34,7 @@ function SortableItemRow({
 }: {
 	item: ShoppingItem;
 	onStatusChange: (status: ItemStatus) => void;
-	onEditItem: (focusField?: "price") => void;
+	onEditItem: (editTarget?: "price") => void;
 }) {
 	const {
 		attributes,
@@ -101,7 +101,7 @@ export function SortableItemList({
 						key={item.id}
 						item={item}
 						onStatusChange={(status) => onStatusChange(item.id, status)}
-						onEditItem={(focusField) => onEditItem(item.id, focusField)}
+						onEditItem={(editTarget) => onEditItem(item.id, editTarget)}
 					/>
 				))}
 			</SortableContext>

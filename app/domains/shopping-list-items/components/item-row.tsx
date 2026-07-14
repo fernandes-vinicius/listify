@@ -18,7 +18,7 @@ interface ItemRowProps {
 	dragHandleAttributes?: DraggableAttributes;
 	dragHandleListeners?: DraggableSyntheticListeners;
 	onStatusChange: (status: ItemStatus) => void;
-	onEdit: (focusField?: "price") => void;
+	onEdit: (editTarget?: "price") => void;
 }
 
 export function ItemRow({

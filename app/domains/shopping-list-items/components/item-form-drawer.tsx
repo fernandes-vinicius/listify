@@ -47,10 +47,6 @@ interface ItemFormDrawerProps {
 	itemId?: string;
 	initialValues?: ItemFormInitialValues;
 	onDelete?: () => void;
-	// Quando "price", o Sheet abre com foco já no campo de preço (ex: usuário
-	// clicou em cima do preço na linha do item) em vez do foco padrão no
-	// primeiro campo — e quando ausente, não foca nenhum campo automaticamente.
-	focusField?: "price";
 }
 
 const STATUS_OPTIONS: { status: ItemStatus; label: string }[] = [
@@ -67,10 +63,9 @@ export function ItemFormDrawer({
 	itemId,
 	initialValues,
 	onDelete,
-	focusField,
 }: ItemFormDrawerProps) {
 	const fetcher = useFetcher();
-	const priceInputRef = useRef<HTMLInputElement>(null);
+	const nameInputRef = useRef<HTMLInputElement>(null);
 
 	const [form, fields] = useForm({
 		lastResult: fetcher.data,
@@ -107,8 +102,9 @@ export function ItemFormDrawer({
 	// "Adicionar" permanece aberto pra permitir cadastrar vários itens em
 	// sequência — os campos geridos pelo Conform resetam sozinhos (via
 	// `resetForm` no clientAction), então só precisamos resetar os campos de
-	// estado local aqui. "Editar" fecha o Sheet ao ver um `lastResult` de
-	// sucesso.
+	// estado local aqui, e devolver o foco pro campo Nome (pronto pro próximo
+	// item). "Editar" fecha o Sheet ao ver um `lastResult` de sucesso — sem
+	// mudança de foco, já que o Sheet nem fica visível depois.
 	//
 	// `submission.reply({ resetForm: true })` (usado no "adicionar") retorna
 	// `{ initialValue: null }` sem nenhum campo `status` — só o reply comum de
@@ -123,6 +119,7 @@ export function ItemFormDrawer({
 		} else {
 			setQuantityRaw("1");
 			setPrice(0);
+			nameInputRef.current?.focus();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [fetcher.data]);
@@ -131,11 +128,10 @@ export function ItemFormDrawer({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
-				// Sem `focusField`, não foca nenhum campo automaticamente (em vez do
-				// padrão do Dialog de focar o primeiro elemento focável). Com
-				// `focusField="price"` (usuário clicou no preço da linha), foca
-				// direto o input de preço, pronto pra alterar.
-				initialFocus={focusField === "price" ? priceInputRef : false}
+				// Não foca nenhum campo automaticamente ao abrir (em vez do padrão do
+				// Dialog de focar o primeiro elemento focável) — o foco no Nome após
+				// salvar (modo "adicionar") é tratado à parte, no efeito acima.
+				initialFocus={false}
 				className="mx-auto flex min-h-[96%] w-full max-w-xl flex-col rounded-t-xl sm:min-h-auto"
 			>
 				<fetcher.Form
@@ -169,6 +165,7 @@ export function ItemFormDrawer({
 						<Field>
 							<FieldLabel htmlFor={fields.name.id}>Nome</FieldLabel>
 							<Input
+								ref={nameInputRef}
 								{...getInputProps(fields.name, { type: "text" })}
 								placeholder="Ex: leite"
 								autoCapitalize="none"
@@ -204,7 +201,6 @@ export function ItemFormDrawer({
 								<input type="hidden" name="price" value={price} readOnly />
 								<div className="flex gap-1.5">
 									<CurrencyInput
-										ref={priceInputRef}
 										id="item-price"
 										value={price}
 										onValueChange={setPrice}
