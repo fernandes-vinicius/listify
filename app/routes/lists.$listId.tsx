@@ -183,19 +183,18 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	return (
 		<div className="container-wrapper">
 			<div className="mb-6 flex items-center gap-2.5 sm:mb-7 sm:gap-3.5">
-				<Link
-					to="/"
-					className="flex size-8 shrink-0 items-center justify-center rounded-md border text-foreground hover:bg-muted"
-					aria-label="Voltar para suas listas"
-				>
-					<ChevronLeft className="size-4" />
-				</Link>
+				<Button
+					size="icon-sm"
+					variant="outline"
+					className="shrink-0"
+					render={
+						<Link to="/" aria-label="Voltar para suas listas">
+							<ChevronLeft />
+						</Link>
+					}
+				/>
 
-				<button
-					type="button"
-					onClick={() => setEditOpen(true)}
-					className="min-w-0 flex-1 text-left"
-				>
+				<div className="min-w-0 flex-1 text-left">
 					<h1 className="truncate font-bold text-xl tracking-tight sm:text-2xl">
 						{list.name}
 					</h1>
@@ -219,12 +218,16 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 							</>
 						)}
 					</div>
-				</button>
+				</div>
 
 				<DropdownMenu>
-					<DropdownMenuTrigger className="flex size-8 shrink-0 items-center justify-center rounded-md border text-muted-foreground hover:bg-muted">
-						<MoreVertical className="size-4" />
-					</DropdownMenuTrigger>
+					<DropdownMenuTrigger
+						render={
+							<Button size="icon-sm" variant="outline">
+								<MoreVertical />
+							</Button>
+						}
+					/>
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem onClick={() => setEditOpen(true)}>
 							<Pencil className="size-3.5" />

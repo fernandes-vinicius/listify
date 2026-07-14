@@ -19,7 +19,7 @@ export function ModeToggle() {
 				render={
 					<Button
 						variant="outline"
-						size="icon"
+						size="icon-sm"
 						className="relative"
 						aria-label="Alternar tema"
 					/>
