@@ -93,7 +93,7 @@ export function ItemFormDrawer({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
-				className="mx-auto flex max-h-[95%] min-h-[95%] w-full max-w-xl flex-col rounded-t-xl"
+				className="mx-auto flex min-h-[96%] w-full max-w-xl flex-col rounded-t-xl sm:min-h-auto"
 			>
 				<form
 					onSubmit={handleSubmit}
