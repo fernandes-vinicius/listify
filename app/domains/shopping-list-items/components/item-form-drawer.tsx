@@ -7,7 +7,7 @@ import { useFetcher } from "react-router";
 import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 import { CurrencyInput } from "~/shared/components/currency-input";
-import { Check, Home, Plus, Trash2 } from "~/shared/components/icons";
+import { Check, Home, Plus } from "~/shared/components/icons";
 import { Button } from "~/shared/components/ui/button";
 import {
 	Field,
@@ -214,12 +214,7 @@ export function ItemFormDrawer({
 							</Field>
 						</div>
 
-						<Field>
-							<Label>Total</Label>
-							<div className="rounded-md border bg-muted px-3 py-2 font-bold text-sm">
-								{formatCurrency(total)}
-							</div>
-						</Field>
+						{/* <FieldSeparator>Status</FieldSeparator> */}
 
 						{mode === "edit" && (
 							<Field>
@@ -287,17 +282,25 @@ export function ItemFormDrawer({
 								</div>
 							</Field>
 						)}
+
+						<Field
+							orientation="horizontal"
+							className="border-t border-dashed pt-5"
+						>
+							<Label className="flex-1 text-muted-foreground">Total</Label>
+							<div className="font-medium text-sm">{formatCurrency(total)}</div>
+						</Field>
 					</FieldGroup>
 
-					<SheetFooter className="flex-col-reverse gap-2 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
+					<SheetFooter className="flex-col-reverse gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
 						{mode === "edit" && onDelete ? (
 							<Button
 								type="button"
-								variant="outline"
-								className="w-full text-destructive sm:w-auto"
+								variant="destructive"
+								className="w-full sm:w-auto"
 								onClick={onDelete}
 							>
-								<Trash2 className="size-3.5" />
+								{/* <Trash2 /> */}
 								Excluir
 							</Button>
 						) : (
@@ -310,7 +313,7 @@ export function ItemFormDrawer({
 						>
 							{mode === "add" ? (
 								<>
-									<Plus className="size-4" />
+									<Plus />
 									{submitting ? "Adicionando…" : "Adicionar item"}
 								</>
 							) : submitting ? (
