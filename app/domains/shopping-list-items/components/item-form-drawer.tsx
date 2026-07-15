@@ -185,7 +185,7 @@ export function ItemFormDrawer({
 							<FieldError>{fields.name.errors?.[0]}</FieldError>
 						</Field>
 
-						<div className="grid grid-cols-2 gap-2 sm:gap-3">
+						<div className="grid grid-cols-2 gap-3">
 							<Field>
 								<FieldLabel htmlFor={fields.quantity.id}>Quantidade</FieldLabel>
 								<Input
