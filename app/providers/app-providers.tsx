@@ -16,7 +16,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 			>
 				<TooltipProvider>
 					{children}
-					<Toaster position="top-center" />
+					<Toaster position="top-center" closeButton richColors />
 				</TooltipProvider>
 			</ThemeProvider>
 		</NuqsAdapter>
