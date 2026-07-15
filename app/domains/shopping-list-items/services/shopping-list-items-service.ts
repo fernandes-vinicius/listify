@@ -1,4 +1,5 @@
 import type {
+	ItemSortDirection,
 	ItemStatus,
 	ShoppingItem,
 } from "~/domains/shopping-list-items/types/item-types";
@@ -34,13 +35,42 @@ export interface ItemInput {
 	price: number;
 }
 
+function compareNames(
+	a: string,
+	b: string,
+	direction: ItemSortDirection,
+): number {
+	const comparison = a.localeCompare(b, "pt-BR", { sensitivity: "base" });
+	return direction === "asc" ? comparison : -comparison;
+}
+
+// Acha em que posição (dentre os itens já ordenados por `order`) um item com
+// esse nome deveria entrar, seguindo a mesma ordenação de `sortItemsByName` —
+// primeiro item existente que "vem depois" do novo nome.
+function findSortedInsertIndex(
+	items: ShoppingItem[],
+	name: string,
+	direction: ItemSortDirection,
+): number {
+	const index = items.findIndex(
+		(existing) => compareNames(name, existing.name, direction) < 0,
+	);
+	return index === -1 ? items.length : index;
+}
+
 export function addItem(
 	storage: StorageShape,
 	listId: string,
 	input: ItemInput,
+	sortDirection?: ItemSortDirection | null,
 ): { storage: StorageShape; item?: ShoppingItem } {
 	const list = findList(storage, listId);
 	if (!list) return { storage };
+
+	const currentItems = [...list.items].sort((a, b) => a.order - b.order);
+	const insertIndex = sortDirection
+		? findSortedInsertIndex(currentItems, input.name, sortDirection)
+		: currentItems.length;
 
 	const item: ShoppingItem = {
 		id: createId(),
@@ -49,14 +79,20 @@ export function addItem(
 		unit: input.unit,
 		price: input.price,
 		status: "unchecked",
-		order: list.items.length,
+		order: insertIndex,
 		createdAt: new Date().toISOString(),
 	};
+
+	const nextItems = [
+		...currentItems.slice(0, insertIndex),
+		item,
+		...currentItems.slice(insertIndex),
+	].map((existing, index) => ({ ...existing, order: index }));
 
 	return {
 		storage: {
 			lists: storage.lists.map((l) =>
-				l.id === listId ? { ...l, items: [...l.items, item] } : l,
+				l.id === listId ? { ...l, items: nextItems } : l,
 			),
 		},
 		item,
@@ -150,18 +186,15 @@ export function setAllItemsStatus(
 export function sortItemsByName(
 	storage: StorageShape,
 	listId: string,
-	direction: "asc" | "desc",
+	direction: ItemSortDirection,
 ): StorageShape {
 	return {
 		lists: storage.lists.map((list) => {
 			if (list.id !== listId) return list;
 
-			const sorted = [...list.items].sort((a, b) => {
-				const comparison = a.name.localeCompare(b.name, "pt-BR", {
-					sensitivity: "base",
-				});
-				return direction === "asc" ? comparison : -comparison;
-			});
+			const sorted = [...list.items].sort((a, b) =>
+				compareNames(a.name, b.name, direction),
+			);
 
 			return {
 				...list,

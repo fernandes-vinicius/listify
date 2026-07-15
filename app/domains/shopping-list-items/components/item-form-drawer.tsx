@@ -3,6 +3,7 @@ import { parseWithZod } from "@conform-to/zod";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 import { StatusOptionCard } from "~/domains/shopping-list-items/components/status-option-card";
+import { useItemsSortOrder } from "~/domains/shopping-list-items/hooks/use-items-sort-order";
 // import { PriceScanButton } from "~/domains/shopping-list-items/components/price-scan-button";
 import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
@@ -66,6 +67,7 @@ export function ItemFormDrawer({
 }: ItemFormDrawerProps) {
 	const fetcher = useFetcher();
 	const nameInputRef = useRef<HTMLInputElement>(null);
+	const [sortOrder] = useItemsSortOrder();
 
 	const [form, fields] = useForm({
 		lastResult: fetcher.data,
@@ -149,6 +151,14 @@ export function ItemFormDrawer({
 						<input type="hidden" name="itemId" value={itemId} />
 					)}
 					<input type="hidden" name="status" value={status} readOnly />
+					{mode === "add" && (
+						<input
+							type="hidden"
+							name="sortOrder"
+							value={sortOrder ?? ""}
+							readOnly
+						/>
+					)}
 
 					<SheetHeader className="p-4 text-center">
 						<SheetTitle>

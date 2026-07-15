@@ -1,4 +1,5 @@
 export type ItemStatus = "unchecked" | "checked" | "have_at_home";
+export type ItemSortDirection = "asc" | "desc";
 
 export interface ShoppingItem {
 	id: string;

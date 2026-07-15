@@ -1,5 +1,8 @@
 import { useFetcher } from "react-router";
-import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
+import type {
+	ItemSortDirection,
+	ItemStatus,
+} from "~/domains/shopping-list-items/types/item-types";
 
 // Adicionar e editar item são conduzidos pelo próprio `ItemFormDrawer` via
 // `fetcher.Form` + Conform (ver item-form-drawer.tsx), não por hooks
@@ -55,7 +58,7 @@ export function useSetAllItemsStatus() {
 export function useSortItemsByName() {
 	const fetcher = useFetcher();
 
-	function sortItemsByName(direction: "asc" | "desc") {
+	function sortItemsByName(direction: ItemSortDirection) {
 		fetcher.submit({ intent: "sort-items", direction }, { method: "post" });
 	}
 

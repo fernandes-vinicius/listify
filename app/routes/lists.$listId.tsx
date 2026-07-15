@@ -10,6 +10,7 @@ import {
 	ItemPriceEditDrawer,
 	ItemSection,
 	type ItemStatus,
+	ItemsSortMenu,
 	itemFormSchema,
 	ListTotalsSummary,
 	reorderItems,
@@ -20,7 +21,6 @@ import {
 	useDeleteItem,
 	useReorderItems,
 	useSetAllItemsStatus,
-	useSortItemsByName,
 	useToggleItemStatus,
 } from "~/domains/shopping-list-items";
 import {
@@ -36,9 +36,6 @@ import {
 } from "~/domains/shopping-lists";
 import { getBudgetStatus } from "~/domains/shopping-lists/utils/budget-status";
 import {
-	ArrowDownAZ,
-	ArrowDownZA,
-	ArrowUpDown,
 	Check,
 	ChevronLeft,
 	Circle,
@@ -102,7 +99,18 @@ export async function clientAction({
 			const submission = parseWithZod(formData, { schema: itemFormSchema });
 			if (submission.status !== "success") return submission.reply();
 
-			const { storage: next } = addItem(storage, listId, submission.value);
+			const sortOrderValue = formData.get("sortOrder");
+			const sortOrder =
+				sortOrderValue === "asc" || sortOrderValue === "desc"
+					? sortOrderValue
+					: null;
+
+			const { storage: next } = addItem(
+				storage,
+				listId,
+				submission.value,
+				sortOrder,
+			);
 			writeStorage(next);
 			return submission.reply({ resetForm: true });
 		}
@@ -164,7 +172,6 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const { setItemStatus: submitStatus } = useToggleItemStatus();
 	const { reorderItems: submitReorder } = useReorderItems();
 	const { setAllItemsStatus: submitAllStatus } = useSetAllItemsStatus();
-	const { sortItemsByName: submitSort } = useSortItemsByName();
 	const { deleteShoppingList: deleteList } = useDeleteShoppingList();
 
 	const [isEditOpen, setEditOpen] = useState(false);
@@ -283,30 +290,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 						<Plus />
 						Adicionar item
 					</Button>
-					<DropdownMenu>
-						<DropdownMenuTrigger
-							render={
-								<Button
-									size="icon-sm"
-									variant="outline"
-									disabled={list.items.length === 0}
-									aria-label="Reordenar itens"
-								>
-									<ArrowUpDown />
-								</Button>
-							}
-						/>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={() => submitSort("asc")}>
-								<ArrowDownAZ />
-								Nome (A-Z)
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => submitSort("desc")}>
-								<ArrowDownZA />
-								Nome (Z-A)
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<ItemsSortMenu disabled={list.items.length === 0} />
 				</div>
 			</div>
 

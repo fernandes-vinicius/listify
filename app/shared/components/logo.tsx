@@ -10,10 +10,10 @@ export function Logo({ className, ...props }: React.ComponentProps<"div">) {
 			)}
 			{...props}
 		>
-			<span className="flex size-7 items-center justify-center rounded-2xl bg-foreground text-background">
+			<span className="flex size-7 items-center justify-center rounded-lg bg-foreground text-background">
 				<ShoppingBasket className="size-4" />
 			</span>
-			Listify
+			Listify.
 		</div>
 	);
 }
