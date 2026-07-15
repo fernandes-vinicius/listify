@@ -1,21 +1,160 @@
-# React Router + shadcn/ui
+<p align="center">
+  <img src="public/thumbnail.png" alt="Listify" width="100%" />
+</p>
 
-This is a template for a new React Router project with React, TypeScript, and shadcn/ui.
+<p align="center">
+  <img src="public/logo-listify-icon.svg" alt="Listify" width="96" />
+</p>
 
-## Adding components
+<!-- <hr /> -->
 
-To add components to your app, run the following command:
+<p align="center">
+  <strong>Listify</strong><br />
+  Suas listas de compras, sem bagunça — offline-first, instalável como app, com leitor de preço por foto via IA.
+</p>
+
+<p align="center">
+  React Router v7 (framework mode, SPA) · Tailwind CSS v4 · PWA · Gemini AI
+</p>
+
+---
+
+## Sobre o projeto
+
+Listify é um app de listas de compras 100% client-side: não há backend nem banco de dados, os dados ficam salvos em `localStorage` e o app é instalável como PWA, funcionando mesmo offline. Dá pra criar múltiplas listas, adicionar e reordenar itens por drag-and-drop, marcar itens como comprados e acompanhar o total estimado (e orçamento) em tempo real.
+
+O diferencial é o leitor de preços por foto: usando a API do Google Gemini, o app identifica o preço de um produto a partir da foto da etiqueta de prateleira ou da embalagem, e preenche o valor automaticamente no formulário do item.
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Framework | [React Router v7](https://reactrouter.com/) (framework mode, modo SPA — `ssr: false`, dados vivem no client) |
+| UI | React 19, Tailwind CSS v4, componentes shadcn-derivados sobre [Base UI](https://base-ui.com/) (`@base-ui/react`, não Radix) |
+| Formulários | [Conform](https://conform.guide/) (`@conform-to/react` + `@conform-to/zod`) + Zod |
+| Drag-and-drop | [dnd-kit](https://dndkit.com/) (`@dnd-kit/core` + `sortable` + `utilities`) — reordenar itens da lista |
+| IA | [Google Gemini](https://ai.google.dev/) (`gemini-3.1-flash-lite`) — leitor de preço a partir de foto |
+| Tema | `next-themes` (claro/escuro/sistema) |
+| Estado de URL | [nuqs](https://nuqs.dev/) — ex.: ordenação dos itens persistida na URL |
+| Persistência | `localStorage` (sem backend/banco de dados) |
+| PWA | `vite-plugin-pwa` (Workbox) + `@vite-pwa/assets-generator` |
+| Lint/format | [Biome](https://biomejs.dev/) (tabs, aspas duplas, `organizeImports`, `useSortedClasses`) |
+| Runtime alvo | Node.js 20 (ver `Dockerfile`) |
+
+## Como rodar localmente
+
+### Pré-requisitos
+
+- Node.js 20+
+
+### 1. Clonar e instalar
 
 ```bash
-npx shadcn@latest add button
+git clone <url-do-repo>
+cd listify
+npm install
 ```
 
-This will place the ui components in the `components` directory.
+### 2. Configurar variáveis de ambiente
 
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button";
+```bash
+cp .env.example .env
 ```
+
+| Variável | Descrição |
+|---|---|
+| `VITE_GEMINI_API_KEY` | Chave gratuita do [Google AI Studio](https://aistudio.google.com/apikey), usada pelo leitor de preço por foto (`PriceScanButton`). Sem ela, o app funciona normalmente — só o scanner de preço fica indisponível. |
+
+> ⚠️ Essa chave é embutida no bundle do client (variáveis `VITE_*` são públicas em builds do Vite). Aceitável pra uso pessoal/teste; se o app for exposto publicamente, restrinja a chave por referrer no Google Cloud Console.
+
+### 3. Rodar o dev server
+
+```bash
+npm run dev
+```
+
+App disponível em `http://localhost:5173` (porta padrão do Vite).
+
+## Scripts disponíveis
+
+```bash
+npm run dev                 # dev server (Vite + React Router), HMR
+npm run build                # build de produção (react-router build)
+npm run start                 # serve o build de produção
+npm run typecheck              # react-router typegen && tsc — rode após qualquer mudança
+npm run format                 # biome format . --write
+npm run generate-pwa-assets      # regenera ícones PWA a partir do SVG fonte (pwa-assets.config.ts)
+```
+
+Não há script de lint separado nem suíte de testes configurada — não invente um. O Biome cobre format + lint (`biome.json`).
+
+## Estrutura do projeto
+
+```
+app/
+  routes/            rotas via @react-router/fs-routes (convenção de arquivo, ver abaixo)
+  domains/           lógica de domínio (shopping-lists, shopping-list-items)
+  shared/
+    components/        UI compartilhada — ui/ (shadcn-derivado sobre Base UI), icons.tsx, pwa/
+    lib/               utilitários cross-domain (storage.ts, utils.ts, id.ts)
+  providers/          providers de app (tema, nuqs, tooltip, toaster)
+  root.tsx            layout raiz, ErrorBoundary (404 e erro genérico)
+public/
+  *.png/*.ico/*.svg     ícones PWA/favicon gerados + logo fonte
+```
+
+### Rotas
+
+Descobertas automaticamente via `@react-router/fs-routes` — uma pasta/arquivo por rota, `$param` para segmento dinâmico (`lists.$listId` → `/lists/:listId`), `_index` para rota índice, `$` para o catch-all de 404. Modo SPA (`react-router.config.ts` → `ssr: false`): não há servidor de dados, `loader`/`action` viram `clientLoader`/`clientAction` e leem/escrevem em `localStorage`.
+
+### Arquitetura por domínio (`app/domains/*`)
+
+Cada domínio (`shopping-lists`, `shopping-list-items`) segue a mesma estrutura, com um barrel `index.ts` reexportando a superfície pública:
+
+```
+app/domains/<dominio>/
+  components/     UI do domínio (cards, dialogs, drawers)
+  hooks/          hooks React específicos do domínio
+  services/       funções que leem/escrevem em localStorage (via shared/lib/storage.ts)
+  schemas/        schemas Zod (validação de formulário via Conform)
+  types/          tipos do domínio
+  utils/          helpers puros, sem I/O (ex.: budget-status.ts, item-totals.ts)
+  index.ts        barrel — outras partes do app importam só daqui
+```
+
+Outras partes do app importam pelo barrel (`~/domains/shopping-lists`), nunca por caminho interno direto. Imports são sempre absolutos via `~/` (alias para `app/`) — nunca `./` ou `../`.
+
+## Leitor de preço por foto (Gemini)
+
+`app/domains/shopping-list-items/utils/gemini-price-scanner.ts` chama a API do Gemini (`gemini-3.1-flash-lite`, o modelo mais barato/rápido do tier gratuito com suporte a imagem) diretamente do client, passando a foto e um prompt pedindo o preço unitário em reais como JSON estruturado (`responseSchema`). O resultado passa por uma validação de plausibilidade (`0 < preço < 10000`) antes de preencher o formulário — e ainda é revalidado pelo Zod normal do submit.
+
+## Ícones e UI kit
+
+- **Nunca** importe do `lucide-react` direto em um componente — todo ícone usado no app é re-exportado por nome em `app/shared/components/icons.tsx`. Precisa de um ícone novo? Adicione lá primeiro.
+- `app/shared/components/ui/*` são componentes shadcn-derivados, mas rodam sobre [Base UI](https://base-ui.com/) em vez de Radix — composição do tipo "as child" usa a prop `render` (ex.: `<Button render={<Link to="/">...</Link>} />`), não `asChild`.
+
+## PWA e ícones do app
+
+Ícones PWA/favicon são gerados a partir de `public/logo-listify-icon.svg` via `@vite-pwa/assets-generator` (`pwa-assets.config.ts` → `npm run generate-pwa-assets`), e ficam na raiz de `public/` pra casar com os paths esperados pelo manifest (`vite.config.ts` → `VitePWA`) e por `app/root.tsx`. Como o app roda em modo SPA (sem `index.html` próprio pro plugin injetar), o service worker é registrado manualmente a partir de um componente client (`app/shared/components/pwa/register-pwa.tsx`).
+
+## Deploy
+
+### Docker
+
+```bash
+docker build -t listify .
+docker run -p 3000:3000 --env-file .env listify
+```
+
+O `Dockerfile` faz build multi-stage (deps → build → runtime) em `node:20-alpine` e roda `npm run start` no final, servindo `build/server/index.js`.
+
+### Sem Docker
+
+Qualquer plataforma que rode Node 20+ funciona: faça `npm run build` e sirva com `npm run start` (ou `react-router-serve ./build/server/index.js` diretamente). Como o app é 100% client-side, basta servir os arquivos estáticos gerados em `build/client` em qualquer host estático (Vercel, Netlify, etc.) — `npm run start` é só uma opção conveniente.
+
+## Convenções gerais
+
+- **Nomenclatura de arquivos**: kebab-case em todo lugar, inclusive nomes com múltiplas palavras (`item-price-edit-drawer.tsx`, não `item.price.edit.drawer.tsx`).
+- **Imports**: sempre absolutos via `~/` — nunca `./` ou `../`, exceto `./+types/route` dentro de arquivos de rota (gerado por `react-router typegen`).
+- **Copy**: sempre pt-BR.
+- Antes de criar um util ou schema novo, confira se já não existe algo equivalente em `app/shared/lib/` ou no domínio relevante.
