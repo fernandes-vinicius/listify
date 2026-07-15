@@ -185,7 +185,7 @@ export function ItemFormDrawer({
 							<FieldError>{fields.name.errors?.[0]}</FieldError>
 						</Field>
 
-						<div className="grid grid-cols-3 gap-2 sm:gap-3">
+						<div className="grid grid-cols-2 gap-2 sm:gap-3">
 							<Field>
 								<FieldLabel htmlFor={fields.quantity.id}>Quantidade</FieldLabel>
 								<Input
@@ -206,7 +206,7 @@ export function ItemFormDrawer({
 								/>
 								<FieldError>{fields.unit.errors?.[0]}</FieldError>
 							</Field>
-							<Field>
+							<Field className="col-span-full">
 								<FieldLabel htmlFor="item-price">Preço unitário</FieldLabel>
 								<input type="hidden" name="price" value={price} readOnly />
 								<div className="flex gap-1.5">
