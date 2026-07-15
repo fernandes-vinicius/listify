@@ -39,34 +39,12 @@ export default defineConfig({
 			},
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
-				// Os .js do Tesseract (worker.min.js, tesseract-core-lstm.wasm.js)
-				// bateriam no globPattern acima e entrariam no precache inicial da
-				// instalação do PWA — excluídos aqui porque só quem usa o scanner de
-				// preço deve baixar esses ~4MB, via o runtimeCaching abaixo.
-				globIgnores: ["tesseract/**/*"],
 				// App 100% client-side (dados em localStorage) — cachear o shell da
 				// SPA permite navegação completa offline, diferente de uma app SSR
 				// onde o HTML precisa vir do servidor a cada navegação.
 				navigateFallback: "/index.html",
 				cleanupOutdatedCaches: true,
 				clientsClaim: true,
-				// Assets do Tesseract.js (worker + core WASM + dados de idioma) não
-				// entram no precache — só quem usa o scanner de preço baixa esses
-				// ~9-10MB, e a partir daí ficam disponíveis offline via cache-first.
-				runtimeCaching: [
-					{
-						urlPattern: /\/tesseract\//,
-						handler: "CacheFirst",
-						options: {
-							cacheName: "tesseract-assets",
-							expiration: {
-								maxEntries: 20,
-								maxAgeSeconds: 60 * 60 * 24 * 365,
-							},
-							cacheableResponse: { statuses: [0, 200] },
-						},
-					},
-				],
 			},
 			devOptions: {
 				enabled: true,

@@ -2,9 +2,9 @@ import { getFormProps, getInputProps, useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
+import { PriceScanButton } from "~/domains/shopping-list-items/components/price-scan-button";
 import { StatusOptionCard } from "~/domains/shopping-list-items/components/status-option-card";
 import { useItemsSortOrder } from "~/domains/shopping-list-items/hooks/use-items-sort-order";
-// import { PriceScanButton } from "~/domains/shopping-list-items/components/price-scan-button";
 import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 import { CurrencyInput } from "~/shared/components/currency-input";
@@ -216,9 +216,9 @@ export function ItemFormDrawer({
 										onValueChange={setPrice}
 										className="min-w-0 flex-1"
 									/>
-									{/* {mode === "edit" && (
+									{mode === "edit" && (
 										<PriceScanButton onPriceDetected={setPrice} />
-									)} */}
+									)}
 								</div>
 								<FieldError>{fields.price.errors?.[0]}</FieldError>
 							</Field>
