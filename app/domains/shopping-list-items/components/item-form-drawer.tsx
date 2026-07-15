@@ -2,12 +2,12 @@ import { getFormProps, getInputProps, useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
-
+import { StatusOptionCard } from "~/domains/shopping-list-items/components/status-option-card";
 // import { PriceScanButton } from "~/domains/shopping-list-items/components/price-scan-button";
 import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 import { CurrencyInput } from "~/shared/components/currency-input";
-import { Check, Home, Plus } from "~/shared/components/icons";
+import { Plus } from "~/shared/components/icons";
 import { Button } from "~/shared/components/ui/button";
 import {
 	Field,
@@ -25,7 +25,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "~/shared/components/ui/sheet";
-import { cn, formatCurrency } from "~/shared/lib/utils";
+import { formatCurrency } from "~/shared/lib/utils";
 
 function parseNumber(raw: string): number {
 	return Number(raw.replace(",", ".")) || 0;
@@ -189,7 +189,7 @@ export function ItemFormDrawer({
 								<FieldLabel htmlFor={fields.unit.id}>Unidade</FieldLabel>
 								<Input
 									{...getInputProps(fields.unit, { type: "text" })}
-									placeholder="kg, un, L"
+									placeholder="kg, uni, L"
 									autoCapitalize="none"
 									autoCorrect="off"
 									spellCheck={false}
@@ -220,65 +220,15 @@ export function ItemFormDrawer({
 							<Field>
 								<Label>Status</Label>
 								<div className="grid grid-cols-3 gap-2">
-									{STATUS_OPTIONS.map((option) => {
-										const isSelected = status === option.status;
-										return (
-											<button
-												key={option.status}
-												type="button"
-												onClick={() => setStatus(option.status)}
-												className={cn(
-													"flex flex-col items-center gap-1.5 rounded-md border-[1.5px] px-2 py-2.5 text-center transition-colors",
-													!isSelected && "border-border",
-													isSelected &&
-														option.status === "unchecked" &&
-														"border-muted-foreground/40 bg-muted",
-													isSelected &&
-														option.status === "checked" &&
-														"border-green-600 bg-green-50 dark:bg-green-500/10",
-													isSelected &&
-														option.status === "have_at_home" &&
-														"border-amber-500 bg-amber-50 dark:bg-amber-500/10",
-												)}
-											>
-												<span
-													className={cn(
-														"flex size-5 items-center justify-center rounded-full border-[1.5px]",
-														option.status === "unchecked" &&
-															"border-muted-foreground/30",
-														option.status === "checked" &&
-															"border-green-600 bg-green-600 text-white dark:border-green-500 dark:bg-green-500",
-														option.status === "have_at_home" &&
-															"border-amber-500 bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-													)}
-												>
-													{option.status === "checked" && (
-														<Check className="size-3" strokeWidth={3} />
-													)}
-													{option.status === "have_at_home" && (
-														<Home className="size-3" strokeWidth={2.4} />
-													)}
-												</span>
-												<span
-													className={cn(
-														"font-semibold text-[11px]",
-														!isSelected && "text-muted-foreground",
-														isSelected &&
-															option.status === "unchecked" &&
-															"text-foreground",
-														isSelected &&
-															option.status === "checked" &&
-															"text-green-700 dark:text-green-400",
-														isSelected &&
-															option.status === "have_at_home" &&
-															"text-amber-700 dark:text-amber-400",
-													)}
-												>
-													{option.label}
-												</span>
-											</button>
-										);
-									})}
+									{STATUS_OPTIONS.map((option) => (
+										<StatusOptionCard
+											key={option.status}
+											status={option.status}
+											label={option.label}
+											isSelected={status === option.status}
+											onSelect={setStatus}
+										/>
+									))}
 								</div>
 							</Field>
 						)}
@@ -300,7 +250,6 @@ export function ItemFormDrawer({
 								className="w-full sm:w-auto"
 								onClick={onDelete}
 							>
-								{/* <Trash2 /> */}
 								Excluir
 							</Button>
 						) : (
