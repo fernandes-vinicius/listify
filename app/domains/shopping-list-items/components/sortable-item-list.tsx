@@ -25,16 +25,19 @@ interface SortableItemListProps {
 	onReorder: (itemIds: string[]) => void;
 	onStatusChange: (itemId: string, status: ItemStatus) => void;
 	onEditItem: (itemId: string, editTarget?: "price") => void;
+	onDeleteItem: (itemId: string) => void;
 }
 
 function SortableItemRow({
 	item,
 	onStatusChange,
 	onEditItem,
+	onDeleteItem,
 }: {
 	item: ShoppingItem;
 	onStatusChange: (status: ItemStatus) => void;
 	onEditItem: (editTarget?: "price") => void;
+	onDeleteItem: () => void;
 }) {
 	const {
 		attributes,
@@ -60,6 +63,7 @@ function SortableItemRow({
 				dragHandleListeners={listeners}
 				onStatusChange={onStatusChange}
 				onEdit={onEditItem}
+				onDelete={onDeleteItem}
 			/>
 		</div>
 	);
@@ -70,6 +74,7 @@ export function SortableItemList({
 	onReorder,
 	onStatusChange,
 	onEditItem,
+	onDeleteItem,
 }: SortableItemListProps) {
 	const sensors = useSensors(
 		useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -102,6 +107,7 @@ export function SortableItemList({
 						item={item}
 						onStatusChange={(status) => onStatusChange(item.id, status)}
 						onEditItem={(editTarget) => onEditItem(item.id, editTarget)}
+						onDeleteItem={() => onDeleteItem(item.id)}
 					/>
 				))}
 			</SortableContext>

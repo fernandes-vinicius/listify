@@ -25,6 +25,7 @@ interface ItemSectionProps {
 	onReorder?: (itemIds: string[]) => void;
 	onStatusChange: (itemId: string, status: ItemStatus) => void;
 	onEditItem: (itemId: string, editTarget?: "price") => void;
+	onDeleteItem: (itemId: string) => void;
 }
 
 export function ItemSection({
@@ -34,6 +35,7 @@ export function ItemSection({
 	onReorder,
 	onStatusChange,
 	onEditItem,
+	onDeleteItem,
 }: ItemSectionProps) {
 	if (items.length === 0) return null;
 
@@ -61,6 +63,7 @@ export function ItemSection({
 						onReorder={onReorder}
 						onStatusChange={onStatusChange}
 						onEditItem={onEditItem}
+						onDeleteItem={onDeleteItem}
 					/>
 				) : (
 					items.map((item) => (
@@ -69,6 +72,7 @@ export function ItemSection({
 							item={item}
 							onStatusChange={(next) => onStatusChange(item.id, next)}
 							onEdit={(editTarget) => onEditItem(item.id, editTarget)}
+							onDelete={() => onDeleteItem(item.id)}
 						/>
 					))
 				)}

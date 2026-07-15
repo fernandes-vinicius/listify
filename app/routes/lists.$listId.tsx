@@ -307,18 +307,21 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 						onReorder={(itemIds) => submitReorder(itemIds)}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
 						onEditItem={handleEditItem}
+						onDeleteItem={submitDeleteItem}
 					/>
 					<ItemSection
 						status="checked"
 						items={checkedItems}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
 						onEditItem={handleEditItem}
+						onDeleteItem={submitDeleteItem}
 					/>
 					<ItemSection
 						status="have_at_home"
 						items={homeItems}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
 						onEditItem={handleEditItem}
+						onDeleteItem={submitDeleteItem}
 					/>
 				</>
 			)}
