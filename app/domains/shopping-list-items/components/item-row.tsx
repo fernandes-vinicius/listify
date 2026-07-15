@@ -70,7 +70,7 @@ export function ItemRow({
 				</span>
 				<Badge
 					variant="secondary"
-					className="w-fit shrink-0 font-normal text-muted-foreground"
+					className="w-fit shrink-0 text-muted-foreground"
 				>
 					{item.quantity} {item.unit}
 				</Badge>
@@ -87,12 +87,12 @@ export function ItemRow({
 				<span
 					className={cn(
 						"hidden text-right text-muted-foreground/70 text-xs sm:inline-block sm:w-14",
-						item.status !== "unchecked" && "text-muted-foreground/50",
+						item.status !== "unchecked" && "text-muted-foreground",
 					)}
 				>
 					{formatCurrency(item.price)}
 				</span>
-				<span className="text-right font-bold text-sm sm:w-18">
+				<span className="text-right font-medium text-sm sm:w-18">
 					{formatCurrency(getItemTotal(item))}
 				</span>
 			</button>
