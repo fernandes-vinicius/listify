@@ -139,10 +139,20 @@ export async function clientAction({
 			return null;
 		}
 		case "reorder-items": {
-			const itemIds = JSON.parse(
-				String(formData.get("itemIds") ?? "[]"),
-			) as string[];
-			const next = reorderItems(storage, listId, itemIds);
+			let parsed: unknown;
+			try {
+				parsed = JSON.parse(String(formData.get("itemIds") ?? "[]"));
+			} catch {
+				return null;
+			}
+			if (
+				!Array.isArray(parsed) ||
+				!parsed.every((id) => typeof id === "string")
+			) {
+				return null;
+			}
+
+			const next = reorderItems(storage, listId, parsed);
 			writeStorage(next);
 			return null;
 		}
