@@ -2,13 +2,14 @@ import { getFormProps, getInputProps, useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
+import { toast } from "sonner";
+
 import { PriceScanButton } from "~/domains/shopping-list-items/components/price-scan-button";
 import { StatusOptionCard } from "~/domains/shopping-list-items/components/status-option-card";
 import { useItemsSortOrder } from "~/domains/shopping-list-items/hooks/use-items-sort-order";
 import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
 import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
 import { CurrencyInput } from "~/shared/components/currency-input";
-import { Plus } from "~/shared/components/icons";
 import { Button } from "~/shared/components/ui/button";
 import {
 	Field,
@@ -119,6 +120,7 @@ export function ItemFormDrawer({
 		if (mode === "edit") {
 			onOpenChange(false);
 		} else {
+			toast.success("Item adicionado à lista");
 			setQuantityRaw("1");
 			setPrice(0);
 			nameInputRef.current?.focus();
