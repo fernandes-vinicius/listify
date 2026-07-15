@@ -271,10 +271,7 @@ export function ItemFormDrawer({
 							className={mode === "add" ? "w-full" : "w-full sm:w-auto"}
 						>
 							{mode === "add" ? (
-								<>
-									<Plus />
-									{submitting ? "Adicionando…" : "Adicionar item"}
-								</>
+								<span>{submitting ? "Adicionando…" : "Adicionar item"}</span>
 							) : submitting ? (
 								"Salvando…"
 							) : (

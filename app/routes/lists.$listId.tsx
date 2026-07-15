@@ -42,7 +42,6 @@ import {
 	DotIcon,
 	MoreVertical,
 	Pencil,
-	Plus,
 	Trash2,
 } from "~/shared/components/icons";
 import { Button } from "~/shared/components/ui/button";
@@ -286,10 +285,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 			<div className="mt-6 mb-4 flex items-center justify-between">
 				<h2 className="font-semibold text-lg tracking-tight">Itens</h2>
 				<div className="flex items-center gap-1.5">
-					<Button onClick={() => setAddOpen(true)}>
-						<Plus />
-						Adicionar item
-					</Button>
+					<Button onClick={() => setAddOpen(true)}>Adicionar item</Button>
 					<ItemsSortMenu disabled={list.items.length === 0} />
 				</div>
 			</div>

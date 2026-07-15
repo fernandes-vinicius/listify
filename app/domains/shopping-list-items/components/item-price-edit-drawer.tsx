@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
 import type { ItemFormInitialValues } from "~/domains/shopping-list-items/components/item-form-drawer";
+import { PriceScanButton } from "~/domains/shopping-list-items/components/price-scan-button";
 import { CurrencyInput } from "~/shared/components/currency-input";
 import { Button } from "~/shared/components/ui/button";
 import { Field, FieldLabel } from "~/shared/components/ui/field";
@@ -100,7 +101,7 @@ export function ItemPriceEditDrawer({
 					</SheetHeader>
 
 					<div className="flex flex-col gap-4 p-4">
-						<div className="grid w-full grid-cols-3 items-center gap-2 sm:gap-6">
+						<div className="grid w-full grid-cols-[1fr_1.5fr_auto] items-center gap-2 sm:gap-6">
 							<Field>
 								<FieldLabel htmlFor="price-edit-quantity">
 									Quantidade
@@ -117,16 +118,22 @@ export function ItemPriceEditDrawer({
 								<FieldLabel htmlFor="price-edit-price">
 									Preço unitário
 								</FieldLabel>
-								<CurrencyInput
-									ref={priceInputRef}
-									id="price-edit-price"
-									value={price}
-									onValueChange={setPrice}
-								/>
+								<div className="flex gap-1.5">
+									<CurrencyInput
+										ref={priceInputRef}
+										id="price-edit-price"
+										value={price}
+										onValueChange={setPrice}
+										className="min-w-0 flex-1"
+									/>
+									<PriceScanButton onPriceDetected={setPrice} />
+								</div>
 							</Field>
 							<Field className="pt-1.5 pl-6">
-								<Label className="text-right">Total</Label>
-								<div className="inline-flex h-9 items-center py-1 text-base leading-none">
+								<Label className="flex justify-end text-muted-foreground">
+									<span className="text-right">Total</span>
+								</Label>
+								<div className="inline-flex h-9 items-center py-1 font-medium text-base leading-none">
 									{formatCurrency(total)}
 								</div>
 							</Field>

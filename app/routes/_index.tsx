@@ -106,7 +106,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 					onClick={() => setCreateOpen(true)}
 					className="w-full sm:w-auto"
 				>
-					<Plus />
 					Criar nova lista
 				</Button>
 			</div>
