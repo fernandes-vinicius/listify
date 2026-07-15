@@ -7,6 +7,8 @@ import {
 	ScrollRestoration,
 } from "react-router";
 
+import { ErrorPage } from "~/shared/components/error-page";
+import { Search, TriangleAlert } from "~/shared/components/icons";
 import { InstallPrompt } from "~/shared/components/pwa/install-prompt";
 import { RegisterPWA } from "~/shared/components/pwa/register-pwa";
 
@@ -53,30 +55,34 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	let message = "Oops!";
-	let details = "An unexpected error occurred.";
-	let stack: string | undefined;
-
-	if (isRouteErrorResponse(error)) {
-		message = error.status === 404 ? "404" : "Error";
-		details =
-			error.status === 404
-				? "The requested page could not be found."
-				: error.statusText || details;
-	} else if (import.meta.env.DEV && error && error instanceof Error) {
-		details = error.message;
-		stack = error.stack;
+	if (isRouteErrorResponse(error) && error.status === 404) {
+		return (
+			<ErrorPage
+				icon={Search}
+				title="Página não encontrada"
+				description="Confira se o endereço foi digitado corretamente. Talvez a página tenha sido movida ou não exista mais."
+			/>
+		);
 	}
 
+	const description = isRouteErrorResponse(error)
+		? error.statusText || "Ocorreu um erro inesperado."
+		: "Ocorreu um erro inesperado. Tente novamente em instantes.";
+	const stack =
+		import.meta.env.DEV && error instanceof Error ? error.stack : undefined;
+
 	return (
-		<main className="container mx-auto p-4 pt-16">
-			<h1>{message}</h1>
-			<p>{details}</p>
+		<>
+			<ErrorPage
+				icon={TriangleAlert}
+				title="Algo deu errado"
+				description={description}
+			/>
 			{stack && (
-				<pre className="w-full overflow-x-auto p-4">
+				<pre className="mx-auto w-full max-w-3xl overflow-x-auto p-4 text-xs">
 					<code>{stack}</code>
 				</pre>
 			)}
-		</main>
+		</>
 	);
 }

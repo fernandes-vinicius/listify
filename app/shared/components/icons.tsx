@@ -1,6 +1,7 @@
 export {
 	ArrowDownAZ,
 	ArrowDownZA,
+	ArrowLeft,
 	ArrowUpDown,
 	Camera,
 	Check,
@@ -22,6 +23,7 @@ export {
 	OctagonXIcon,
 	Pencil,
 	Plus,
+	Search,
 	Share,
 	ShoppingBasket,
 	Sun,
@@ -31,3 +33,4 @@ export {
 	X,
 	XIcon,
 } from "lucide-react";
+export type { LucideIcon } from "lucide-react";
