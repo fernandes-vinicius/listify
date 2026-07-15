@@ -44,6 +44,7 @@ import {
 	Pencil,
 	Trash2,
 } from "~/shared/components/icons";
+import { Badge } from "~/shared/components/ui/badge";
 import { Button } from "~/shared/components/ui/button";
 import {
 	DropdownMenu,
@@ -219,9 +220,9 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 						{list.name}
 					</h1>
 					<div className="mt-0.5 flex items-center gap-0.5 text-muted-foreground text-xs">
-						<p>
+						<Badge variant="tertiary">
 							{list.items.length} {list.items.length === 1 ? "item" : "itens"}
-						</p>
+						</Badge>
 						{list.budget && list.budget > 0 && (
 							<>
 								<DotIcon className="size-4 shrink-0" />
