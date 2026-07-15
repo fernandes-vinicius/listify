@@ -39,7 +39,7 @@ export function usePriceScanner(onPriceDetected: (price: number) => void) {
 			if (error instanceof MissingApiKeyError) {
 				toast.error("Leitor de preço não configurado", {
 					description:
-						"Defina VITE_GEMINI_API_KEY no .env pra usar esse recurso.",
+						"Defina GEMINI_API_KEY no servidor pra usar esse recurso.",
 				});
 			} else if (error instanceof RateLimitError) {
 				toast.error("Limite de uso da IA atingido", {
