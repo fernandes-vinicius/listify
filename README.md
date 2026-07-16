@@ -21,9 +21,9 @@
 
 ## Sobre o projeto
 
-Listify é um app de listas de compras 100% client-side: não há backend nem banco de dados, os dados ficam salvos em `localStorage` e o app é instalável como PWA, funcionando mesmo offline. Dá pra criar múltiplas listas, adicionar e reordenar itens por drag-and-drop, marcar itens como comprados e acompanhar o total estimado (e orçamento) em tempo real.
+Listify é um app de listas de compras client-first: não há banco de dados, os dados da lista ficam salvos em `localStorage` e o app é instalável como PWA, funcionando mesmo offline. Dá pra criar múltiplas listas, adicionar e reordenar itens por drag-and-drop, marcar itens como comprados e acompanhar o total estimado (e orçamento) em tempo real.
 
-O diferencial é o leitor de preços por foto: usando a API do Google Gemini, o app identifica o preço de um produto a partir da foto da etiqueta de prateleira ou da embalagem, e preenche o valor automaticamente no formulário do item.
+O diferencial é o leitor de preços por foto: usando a API do Google Gemini, o app identifica o preço de um produto a partir da foto da etiqueta de prateleira ou da embalagem, e preenche o valor automaticamente no formulário do item. Essa chamada passa por uma Vercel Function (`api/scan-price.ts`) — o único ponto server-side do projeto, que existe só pra manter a chave do Gemini fora do bundle do cliente.
 
 ## Stack
 
@@ -33,11 +33,14 @@ O diferencial é o leitor de preços por foto: usando a API do Google Gemini, o 
 | UI | React 19, Tailwind CSS v4, componentes shadcn-derivados sobre [Base UI](https://base-ui.com/) (`@base-ui/react`, não Radix) |
 | Formulários | [Conform](https://conform.guide/) (`@conform-to/react` + `@conform-to/zod`) + Zod |
 | Drag-and-drop | [dnd-kit](https://dndkit.com/) (`@dnd-kit/core` + `sortable` + `utilities`) — reordenar itens da lista |
-| IA | [Google Gemini](https://ai.google.dev/) (`gemini-3.1-flash-lite`) — leitor de preço a partir de foto |
+| IA | [Google Gemini](https://ai.google.dev/) (`gemini-3.1-flash-lite`) — leitor de preço a partir de foto, chamado via `api/scan-price.ts` |
+| Backend | Vercel Function (`api/scan-price.ts`) — único endpoint server-side, proxy pro Gemini |
 | Tema | `next-themes` (claro/escuro/sistema) |
 | Estado de URL | [nuqs](https://nuqs.dev/) — ex.: ordenação dos itens persistida na URL |
-| Persistência | `localStorage` (sem backend/banco de dados) |
+| Persistência | `localStorage` (sem banco de dados) |
 | PWA | `vite-plugin-pwa` (Workbox) + `@vite-pwa/assets-generator` |
+| Analytics | [Vercel Web Analytics](https://vercel.com/docs/analytics) (`@vercel/analytics`) — visitantes/page views, sem cookies |
+| Segurança | Headers (CSP, `X-Frame-Options`, etc.) via `vercel.json` |
 | Lint/format | [Biome](https://biomejs.dev/) (tabs, aspas duplas, `organizeImports`, `useSortedClasses`) |
 | Runtime alvo | Node.js 20 (ver `Dockerfile`) |
 
@@ -63,9 +66,9 @@ cp .env.example .env
 
 | Variável | Descrição |
 |---|---|
-| `VITE_GEMINI_API_KEY` | Chave gratuita do [Google AI Studio](https://aistudio.google.com/apikey), usada pelo leitor de preço por foto (`PriceScanButton`). Sem ela, o app funciona normalmente — só o scanner de preço fica indisponível. |
+| `GEMINI_API_KEY` | Chave gratuita do [Google AI Studio](https://aistudio.google.com/apikey), usada pelo leitor de preço por foto (`PriceScanButton`). Sem ela, o app funciona normalmente — só o scanner de preço fica indisponível. |
 
-> ⚠️ Essa chave é embutida no bundle do client (variáveis `VITE_*` são públicas em builds do Vite). Aceitável pra uso pessoal/teste; se o app for exposto publicamente, restrinja a chave por referrer no Google Cloud Console.
+> Sem prefixo `VITE_` de propósito: a chave só é lida server-side, pela Vercel Function em `api/scan-price.ts` — nunca chega ao bundle do cliente.
 
 ### 3. Rodar o dev server
 
@@ -74,6 +77,8 @@ npm run dev
 ```
 
 App disponível em `http://localhost:5173` (porta padrão do Vite).
+
+> `npm run dev` (Vite puro) não serve o diretório `/api`. Pra testar o leitor de preço por foto localmente, rode `vercel dev` em vez disso.
 
 ## Scripts disponíveis
 
@@ -101,6 +106,8 @@ app/
   root.tsx            layout raiz, ErrorBoundary (404 e erro genérico)
 public/
   *.png/*.ico/*.svg     ícones PWA/favicon gerados + logo fonte
+api/
+  scan-price.ts         Vercel Function — proxy server-side pro Gemini
 ```
 
 ### Rotas
@@ -126,7 +133,7 @@ Outras partes do app importam pelo barrel (`~/domains/shopping-lists`), nunca po
 
 ## Leitor de preço por foto (Gemini)
 
-`app/domains/shopping-list-items/utils/gemini-price-scanner.ts` chama a API do Gemini (`gemini-3.1-flash-lite`, o modelo mais barato/rápido do tier gratuito com suporte a imagem) diretamente do client, passando a foto e um prompt pedindo o preço unitário em reais como JSON estruturado (`responseSchema`). O resultado passa por uma validação de plausibilidade (`0 < preço < 10000`) antes de preencher o formulário — e ainda é revalidado pelo Zod normal do submit.
+`app/domains/shopping-list-items/utils/gemini-price-scanner.ts` envia a foto pro endpoint `/api/scan-price` (client) e trata a resposta em erros tipados (`MissingApiKeyError`, `RateLimitError`). A chamada real ao Gemini acontece server-side, em `api/scan-price.ts` (Vercel Function): monta o prompt pedindo o preço unitário em reais como JSON estruturado (`responseSchema`, modelo `gemini-3.1-flash-lite`) e mantém a `GEMINI_API_KEY` fora do bundle do cliente. O resultado passa por uma validação de plausibilidade (`0 < preço < 10000`) antes de voltar pro form — e ainda é revalidado pelo Zod normal do submit.
 
 ## Ícones e UI kit
 
@@ -150,7 +157,7 @@ O `Dockerfile` faz build multi-stage (deps → build → runtime) em `node:20-al
 
 ### Sem Docker
 
-Qualquer plataforma que rode Node 20+ funciona: faça `npm run build` e sirva com `npm run start` (ou `react-router-serve ./build/server/index.js` diretamente). Como o app é 100% client-side, basta servir os arquivos estáticos gerados em `build/client` em qualquer host estático (Vercel, Netlify, etc.) — `npm run start` é só uma opção conveniente.
+Qualquer plataforma que rode Node 20+ funciona: faça `npm run build` e sirva com `npm run start` (ou `react-router-serve ./build/server/index.js` diretamente). A SPA em si (`build/client`) roda em qualquer host estático — mas o leitor de preço por foto depende da convenção `api/*.ts` da Vercel virar Vercel Function automaticamente; fora da Vercel, isso precisa ser adaptado pro equivalente da plataforma (ou fica sem esse recurso).
 
 ## Convenções gerais
 
