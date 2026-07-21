@@ -32,6 +32,16 @@ export function getShoppingLists(storage: AppStorage): ShoppingList[] {
 	return storage.lists.map(normalizeList);
 }
 
+// Mesma normalização de `getShoppingLists`, mas devolvendo o `AppStorage`
+// inteiro (não só a lista de listas) — para uso em `clientAction`s, que
+// passam o storage bruto (lido direto do localStorage, sem passar por
+// `getShoppingLists`/`getShoppingListById`) pros serviços de mutação. Sem
+// isso, `shopping-groups-service.ts` (que assume `list.groups` já existe)
+// quebra ao operar sobre uma lista salva antes do recurso de agrupamento.
+export function normalizeStorage(storage: AppStorage): AppStorage {
+	return { lists: storage.lists.map(normalizeList) };
+}
+
 export function getShoppingListById(
 	storage: AppStorage,
 	id: string,

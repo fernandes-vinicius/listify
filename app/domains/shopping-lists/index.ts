@@ -16,6 +16,7 @@ export {
 	EMPTY_STORAGE,
 	getShoppingListById,
 	getShoppingLists,
+	normalizeStorage,
 	type UpdateShoppingListInput,
 	updateShoppingList,
 } from "~/domains/shopping-lists/services/shopping-lists-service";
