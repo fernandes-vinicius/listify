@@ -288,9 +288,14 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const uncheckedItems = sortedItems.filter(
 		(item) => item.status === "unchecked",
 	);
-	const checkedItems = sortedItems.filter((item) => item.status === "checked");
-	const homeItems = sortedItems.filter(
-		(item) => item.status === "have_at_home",
+	// Itens comprados/tenho em casa que têm grupo já aparecem dentro do
+	// acordeão do grupo (via `settledItems` em GroupedPendingBoard) — essas
+	// seções só mostram os que estão soltos, sem grupo.
+	const ungroupedCheckedItems = sortedItems.filter(
+		(item) => item.status === "checked" && item.groupId === null,
+	);
+	const ungroupedHomeItems = sortedItems.filter(
+		(item) => item.status === "have_at_home" && item.groupId === null,
 	);
 
 	const editingItem = editingItemId
@@ -455,14 +460,14 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 					)}
 					<ItemSection
 						status="checked"
-						items={checkedItems}
+						items={ungroupedCheckedItems}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
 						onEditItem={handleEditItem}
 						onDeleteItem={submitDeleteItem}
 					/>
 					<ItemSection
 						status="have_at_home"
-						items={homeItems}
+						items={ungroupedHomeItems}
 						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
 						onEditItem={handleEditItem}
 						onDeleteItem={submitDeleteItem}
