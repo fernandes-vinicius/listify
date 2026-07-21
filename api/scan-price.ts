@@ -1,3 +1,5 @@
+import { ipAddress } from "@vercel/functions";
+
 // Vercel Serverless Function (convenção "framework=other": qualquer arquivo
 // em /api vira uma function, independente do build da SPA em app/ que
 // continua com `ssr: false`). Mantém a chave do Gemini fora do bundle do
@@ -14,6 +16,34 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
 // faz sentido nem tentar preencher um valor implausível.
 const MIN_PRICE = 0;
 const MAX_PRICE = 10000;
+
+// A GEMINI_API_KEY é única e compartilhada por todos os visitantes do app —
+// sem esse limite, um único IP martelando o endpoint consegue sozinho
+// estourar a cota gratuita do Gemini pra todo mundo. Contador em memória
+// (sem infra extra): a Fluid Compute reutiliza a mesma instância entre
+// requisições concorrentes, então isso já barra a maior parte do abuso vindo
+// de um único IP, mesmo não sendo um limite globalmente distribuído entre
+// regiões/instâncias.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const requestsByIp = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(ip: string): boolean {
+	const now = Date.now();
+
+	for (const [key, entry] of requestsByIp) {
+		if (now > entry.resetAt) requestsByIp.delete(key);
+	}
+
+	const entry = requestsByIp.get(ip);
+	if (!entry) {
+		requestsByIp.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+		return false;
+	}
+
+	entry.count += 1;
+	return entry.count > RATE_LIMIT_MAX_REQUESTS;
+}
 
 const PROMPT = `Esta foto foi tirada dentro de um supermercado brasileiro, geralmente mostrando a etiqueta de preço de uma prateleira ou a embalagem de um produto.
 
@@ -34,6 +64,11 @@ export async function POST(request: Request) {
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) {
 		return Response.json({ error: "missing_api_key" }, { status: 500 });
+	}
+
+	const ip = ipAddress(request) ?? "unknown";
+	if (isRateLimited(ip)) {
+		return Response.json({ error: "rate_limited" }, { status: 429 });
 	}
 
 	const body = await request.json().catch(() => null);

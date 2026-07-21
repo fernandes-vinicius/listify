@@ -34,7 +34,7 @@ O diferencial é o leitor de preços por foto: usando a API do Google Gemini, o 
 | Formulários | [Conform](https://conform.guide/) (`@conform-to/react` + `@conform-to/zod`) + Zod |
 | Drag-and-drop | [dnd-kit](https://dndkit.com/) (`@dnd-kit/core` + `sortable` + `utilities`) — reordenar itens da lista |
 | IA | [Google Gemini](https://ai.google.dev/) (`gemini-3.1-flash-lite`) — leitor de preço a partir de foto, chamado via `api/scan-price.ts` |
-| Backend | Vercel Function (`api/scan-price.ts`) — único endpoint server-side, proxy pro Gemini |
+| Backend | Vercel Function (`api/scan-price.ts`) — único endpoint server-side, proxy pro Gemini com rate limit por IP (`@vercel/functions`) |
 | Tema | `next-themes` (claro/escuro/sistema) |
 | Estado de URL | [nuqs](https://nuqs.dev/) — ex.: ordenação dos itens persistida na URL |
 | Persistência | `localStorage` (sem banco de dados) |
@@ -134,6 +134,10 @@ Outras partes do app importam pelo barrel (`~/domains/shopping-lists`), nunca po
 ## Leitor de preço por foto (Gemini)
 
 `app/domains/shopping-list-items/utils/gemini-price-scanner.ts` envia a foto pro endpoint `/api/scan-price` (client) e trata a resposta em erros tipados (`MissingApiKeyError`, `RateLimitError`). A chamada real ao Gemini acontece server-side, em `api/scan-price.ts` (Vercel Function): monta o prompt pedindo o preço unitário em reais como JSON estruturado (`responseSchema`, modelo `gemini-3.1-flash-lite`) e mantém a `GEMINI_API_KEY` fora do bundle do cliente. O resultado passa por uma validação de plausibilidade (`0 < preço < 10000`) antes de voltar pro form — e ainda é revalidado pelo Zod normal do submit.
+
+Como a `GEMINI_API_KEY` é compartilhada por todos os usuários do app, `api/scan-price.ts` aplica um rate limit por IP (5 requisições/minuto, via `ipAddress()` de `@vercel/functions`) pra um único visitante não conseguir sozinho estourar a cota gratuita do Gemini pra todo mundo. É um contador em memória — pega a maior parte do abuso graças à reutilização de instância da Fluid Compute, mas não é um limite distribuído entre regiões.
+
+Cada tentativa de scan dispara um evento `price_scan` no Vercel Analytics (`app/domains/shopping-list-items/hooks/use-price-scanner.ts`) com uma propriedade `result` (`success`, `not_detected`, `rate_limited`, `missing_api_key`, `error`) — dá pra acompanhar uso e taxa de erro do recurso direto no dashboard, sem precisar entrar no Google AI Studio.
 
 ## Ícones e UI kit
 
