@@ -28,7 +28,7 @@ interface SortableItemListProps {
 	onDeleteItem: (itemId: string) => void;
 }
 
-function SortableItemRow({
+export function SortableItemRow({
 	item,
 	onStatusChange,
 	onEditItem,

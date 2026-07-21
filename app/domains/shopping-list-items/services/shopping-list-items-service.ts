@@ -81,6 +81,7 @@ export function addItem(
 		status: "unchecked",
 		order: insertIndex,
 		createdAt: new Date().toISOString(),
+		groupId: null,
 	};
 
 	const nextItems = [

@@ -43,3 +43,14 @@ export function getListTotals(items: ShoppingItem[]): ListTotals {
 		progress,
 	};
 }
+
+// Total de um grupo: soma todo item atribuído a ele (comprado ou pendente),
+// não só os visíveis no acordeão — mesma convenção de `getListTotals`, que
+// exclui itens "tenho em casa" do total.
+export function getGroupTotal(items: ShoppingItem[], groupId: string): number {
+	return items
+		.filter(
+			(item) => item.groupId === groupId && item.status !== "have_at_home",
+		)
+		.reduce((sum, item) => sum + getItemTotal(item), 0);
+}

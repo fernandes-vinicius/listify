@@ -1,3 +1,4 @@
+import { track } from "@vercel/analytics";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -25,6 +26,7 @@ export function usePriceScanner(onPriceDetected: (price: number) => void) {
 
 			if (price == null) {
 				setStatus("error");
+				track("price_scan", { result: "not_detected" });
 				toast.error("Não consegui ler o preço na foto", {
 					description: "Tente tirar a foto mais de perto, com boa luz.",
 				});
@@ -33,19 +35,23 @@ export function usePriceScanner(onPriceDetected: (price: number) => void) {
 
 			onPriceDetected(price);
 			setStatus("success");
+			track("price_scan", { result: "success" });
 			toast.success(`Preço identificado: ${formatCurrency(price)}`);
 		} catch (error) {
 			setStatus("error");
 			if (error instanceof MissingApiKeyError) {
+				track("price_scan", { result: "missing_api_key" });
 				toast.error("Leitor de preço não configurado", {
 					description:
 						"Defina GEMINI_API_KEY no servidor pra usar esse recurso.",
 				});
 			} else if (error instanceof RateLimitError) {
+				track("price_scan", { result: "rate_limited" });
 				toast.error("Limite de uso da IA atingido", {
 					description: "Tente novamente em alguns instantes.",
 				});
 			} else {
+				track("price_scan", { result: "error" });
 				toast.error("Não foi possível ler a foto");
 			}
 		} finally {

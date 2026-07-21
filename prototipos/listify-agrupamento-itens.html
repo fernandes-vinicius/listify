@@ -1,0 +1,916 @@
+<!doctype html>
+<title>Listify — Agrupamento de itens</title>
+<meta name="description" content="Protótipo interativo: grupos (acordeão) dentro da lista de compras, com drag-and-drop para mover itens." />
+<style>
+	:root {
+		--bg: oklch(0.985 0.002 247);
+		--card: oklch(1 0 0);
+		--border: oklch(0.917 0.004 247);
+		--fg: oklch(0.18 0.01 247);
+		--muted: oklch(0.52 0.01 247);
+		--muted-2: oklch(0.7 0.008 247);
+		--primary: oklch(0.511 0.096 186.391);
+		--primary-fg: oklch(0.984 0.014 180.72);
+		--primary-wash: oklch(0.511 0.096 186.391 / 0.09);
+		--primary-wash-strong: oklch(0.511 0.096 186.391 / 0.16);
+		--success: oklch(0.6 0.14 152);
+		--success-wash: oklch(0.6 0.14 152 / 0.12);
+		--warning: oklch(0.72 0.15 75);
+		--warning-wash: oklch(0.72 0.15 75 / 0.16);
+		--destructive: oklch(0.577 0.19 27.3);
+		--destructive-wash: oklch(0.577 0.19 27.3 / 0.1);
+		--radius-card: 0.85rem;
+		--radius-row: 0.6rem;
+		--radius-pill: 999px;
+		--shadow-sheet: 0 -8px 30px oklch(0 0 0 / 0.18);
+		--shadow-float: 0 10px 30px oklch(0 0 0 / 0.16);
+		color-scheme: light;
+	}
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--bg: oklch(0.16 0.006 247);
+			--card: oklch(0.205 0.006 247);
+			--border: oklch(0.29 0.008 247);
+			--fg: oklch(0.94 0.003 247);
+			--muted: oklch(0.66 0.008 247);
+			--muted-2: oklch(0.46 0.008 247);
+			--primary: oklch(0.72 0.1 185);
+			--primary-fg: oklch(0.14 0.02 200);
+			--primary-wash: oklch(0.72 0.1 185 / 0.14);
+			--primary-wash-strong: oklch(0.72 0.1 185 / 0.22);
+			--success: oklch(0.72 0.15 152);
+			--success-wash: oklch(0.72 0.15 152 / 0.16);
+			--warning: oklch(0.78 0.14 80);
+			--warning-wash: oklch(0.78 0.14 80 / 0.18);
+			--destructive: oklch(0.7 0.18 25);
+			--destructive-wash: oklch(0.7 0.18 25 / 0.16);
+			--shadow-sheet: 0 -8px 30px oklch(0 0 0 / 0.5);
+			--shadow-float: 0 10px 30px oklch(0 0 0 / 0.45);
+			color-scheme: dark;
+		}
+	}
+	:root[data-theme="dark"] {
+		--bg: oklch(0.16 0.006 247);
+		--card: oklch(0.205 0.006 247);
+		--border: oklch(0.29 0.008 247);
+		--fg: oklch(0.94 0.003 247);
+		--muted: oklch(0.66 0.008 247);
+		--muted-2: oklch(0.46 0.008 247);
+		--primary: oklch(0.72 0.1 185);
+		--primary-fg: oklch(0.14 0.02 200);
+		--primary-wash: oklch(0.72 0.1 185 / 0.14);
+		--primary-wash-strong: oklch(0.72 0.1 185 / 0.22);
+		--success: oklch(0.72 0.15 152);
+		--success-wash: oklch(0.72 0.15 152 / 0.16);
+		--warning: oklch(0.78 0.14 80);
+		--warning-wash: oklch(0.78 0.14 80 / 0.18);
+		--destructive: oklch(0.7 0.18 25);
+		--destructive-wash: oklch(0.7 0.18 25 / 0.16);
+		--shadow-sheet: 0 -8px 30px oklch(0 0 0 / 0.5);
+		--shadow-float: 0 10px 30px oklch(0 0 0 / 0.45);
+		color-scheme: dark;
+	}
+	:root[data-theme="light"] {
+		--bg: oklch(0.985 0.002 247);
+		--card: oklch(1 0 0);
+		--border: oklch(0.917 0.004 247);
+		--fg: oklch(0.18 0.01 247);
+		--muted: oklch(0.52 0.01 247);
+		--muted-2: oklch(0.7 0.008 247);
+		--primary: oklch(0.511 0.096 186.391);
+		--primary-fg: oklch(0.984 0.014 180.72);
+		--primary-wash: oklch(0.511 0.096 186.391 / 0.09);
+		--primary-wash-strong: oklch(0.511 0.096 186.391 / 0.16);
+		--success: oklch(0.6 0.14 152);
+		--success-wash: oklch(0.6 0.14 152 / 0.12);
+		--warning: oklch(0.72 0.15 75);
+		--warning-wash: oklch(0.72 0.15 75 / 0.16);
+		--destructive: oklch(0.577 0.19 27.3);
+		--destructive-wash: oklch(0.577 0.19 27.3 / 0.1);
+		--shadow-sheet: 0 -8px 30px oklch(0 0 0 / 0.18);
+		--shadow-float: 0 10px 30px oklch(0 0 0 / 0.16);
+		color-scheme: light;
+	}
+
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		background: var(--bg);
+		color: var(--fg);
+		font-family: -apple-system, "Segoe UI", Roboto, Inter, system-ui, sans-serif;
+		font-size: 15px;
+		line-height: 1.45;
+		-webkit-font-smoothing: antialiased;
+	}
+	.app {
+		max-width: 640px;
+		margin: 0 auto;
+		padding: 20px 16px 96px;
+	}
+	@media (min-width: 640px) {
+		.app { padding: 40px 24px 96px; }
+	}
+	h1, h2, h3 { font-family: "Segoe UI Semibold", Manrope, -apple-system, system-ui, sans-serif; margin: 0; text-wrap: balance; }
+	button { font: inherit; color: inherit; }
+	.tabular { font-variant-numeric: tabular-nums; }
+
+	/* ---- header ---- */
+	.topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+	.icon-btn {
+		display: inline-flex; align-items: center; justify-content: center;
+		width: 34px; height: 34px; border-radius: var(--radius-pill);
+		border: 1px solid var(--border); background: var(--card); color: var(--fg);
+		cursor: pointer; flex-shrink: 0; transition: background 0.15s;
+	}
+	.icon-btn:hover { background: var(--primary-wash); }
+	.icon-btn:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+	.topbar-title { min-width: 0; flex: 1; }
+	.topbar-title h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.topbar-meta { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+	.chip {
+		display: inline-flex; align-items: center; padding: 2px 9px; border-radius: var(--radius-pill);
+		background: var(--primary-wash); color: var(--primary); font-weight: 600; font-size: 12px;
+	}
+	.dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted-2); flex-shrink: 0; }
+
+	/* ---- summary card ---- */
+	.summary {
+		border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card);
+		padding: 16px; margin-bottom: 22px;
+	}
+	.summary-row { display: flex; align-items: baseline; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+	.summary-row strong { color: var(--fg); font-weight: 600; }
+	.progress-track { height: 7px; border-radius: var(--radius-pill); background: var(--border); overflow: hidden; margin-bottom: 16px; }
+	.progress-fill { height: 100%; background: var(--primary); border-radius: var(--radius-pill); transition: width 0.35s ease; }
+	.summary-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+	.summary-totals .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
+	.summary-totals .value { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+
+	/* ---- items header ---- */
+	.items-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; }
+	.items-header h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+	.actions { display: flex; align-items: center; gap: 7px; }
+	.btn {
+		border-radius: var(--radius-pill); border: 1px solid transparent; cursor: pointer;
+		font-weight: 600; font-size: 13.5px; padding: 8px 15px; display: inline-flex; align-items: center; gap: 6px;
+		transition: transform 0.1s ease, background 0.15s;
+	}
+	.btn:active { transform: scale(0.97); }
+	.btn-primary { background: var(--primary); color: var(--primary-fg); }
+	.btn-primary:hover { filter: brightness(1.06); }
+	.btn-outline { background: var(--card); border-color: var(--border); color: var(--fg); padding: 8px; }
+	.btn-outline:hover { background: var(--primary-wash); }
+	.btn-outline.labeled { padding: 8px 13px; }
+
+	/* ---- empty / hint ---- */
+	.feature-hint {
+		display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin-bottom: 16px;
+		border: 1px dashed var(--primary); border-radius: var(--radius-card); background: var(--primary-wash);
+		font-size: 12.5px; color: var(--fg);
+	}
+	.feature-hint svg { flex-shrink: 0; margin-top: 1px; color: var(--primary); }
+	.feature-hint b { font-weight: 700; }
+
+	/* ---- section (status groups: pendentes/comprados/tenho em casa) ---- */
+	.section { margin-bottom: 20px; }
+	.section-head { display: flex; align-items: center; gap: 8px; padding: 0 2px; margin-bottom: 10px; }
+	.section-head .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+	.section-head h3 { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+	.section-head .count { font-size: 11.5px; font-weight: 600; color: var(--muted-2); }
+	.plain-list { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); overflow: hidden; }
+
+	/* ---- group accordion ---- */
+	.group { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); margin-bottom: 10px; overflow: hidden; }
+	.group.drop-target { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-wash); }
+	.group-head {
+		display: flex; align-items: center; gap: 9px; padding: 12px 12px; cursor: pointer;
+		background: var(--card); user-select: none;
+	}
+	.group-head:hover { background: var(--primary-wash); }
+	.chevron { flex-shrink: 0; color: var(--muted); transition: transform 0.18s ease; }
+	.group.collapsed .chevron { transform: rotate(-90deg); }
+	.group-name-wrap { min-width: 0; flex: 1; display: flex; align-items: baseline; gap: 8px; }
+	.group-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.group-count { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+	.group-total { font-weight: 700; font-size: 14px; flex-shrink: 0; }
+	.group-menu-wrap { position: relative; flex-shrink: 0; }
+	.group-body { border-top: 1px solid var(--border); min-height: 6px; }
+	.group-body.empty::before {
+		content: "Arraste itens pra cá"; display: block; padding: 14px 12px; text-align: center;
+		font-size: 12px; color: var(--muted-2); font-style: italic;
+	}
+	.group[data-collapsed="true"] .group-body { display: none; }
+
+	.ungrouped-label { display: flex; align-items: center; gap: 7px; padding: 4px 2px 8px; font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+	.ungrouped-label svg { color: var(--muted-2); }
+	.ungrouped-zone { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); overflow: hidden; min-height: 8px; }
+	.ungrouped-zone.drop-target { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-wash); }
+	.ungrouped-zone.empty::before {
+		content: "Sem itens soltos"; display: block; padding: 16px 12px; text-align: center;
+		font-size: 12px; color: var(--muted-2); font-style: italic;
+	}
+
+	/* ---- item row ---- */
+	.row {
+		display: flex; align-items: center; gap: 10px; padding: 11px 12px; background: var(--card);
+		border-bottom: 1px solid var(--border); position: relative;
+	}
+	.row:last-child { border-bottom: none; }
+	.row.dragging { opacity: 0.35; }
+	.drag-handle {
+		width: 20px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+		color: var(--muted-2); cursor: grab; touch-action: none; border: none; background: none; padding: 0;
+	}
+	.drag-handle:active { cursor: grabbing; color: var(--primary); }
+	.status-toggle {
+		width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--bg);
+		flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;
+	}
+	.status-toggle[data-status="checked"] { background: var(--success); border-color: var(--success); color: var(--primary-fg); }
+	.status-toggle[data-status="home"] { background: var(--warning-wash); border-color: var(--warning); color: var(--warning); }
+	.row-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+	@media (min-width: 480px) { .row-main { flex-direction: row; align-items: baseline; gap: 10px; } }
+	.row-name { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.row.is-checked .row-name { color: var(--muted-2); text-decoration: line-through; }
+	.row.is-home .row-name { color: var(--muted); }
+	.qty-badge { display: inline-flex; width: fit-content; padding: 1.5px 7px; border-radius: var(--radius-pill); background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-weight: 600; flex-shrink: 0; }
+	.row-price { text-align: right; flex-shrink: 0; }
+	.row-price .unit { display: none; font-size: 11px; color: var(--muted-2); width: 54px; }
+	@media (min-width: 480px) { .row-price .unit { display: inline-block; } }
+	.row-price .total { font-weight: 600; font-size: 13.5px; display: inline-block; width: 60px; }
+
+	/* insertion indicator */
+	.insert-line { height: 2px; background: var(--primary); margin: 0 12px; border-radius: 2px; position: relative; }
+	.insert-line::before { content: ""; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+
+	/* ---- floating create-group button ---- */
+	.fab-row { display: flex; justify-content: flex-end; margin-top: 4px; }
+
+	/* ---- popover (group kebab menu) ---- */
+	.popover {
+		position: absolute; top: 38px; right: 0; z-index: 20; min-width: 168px;
+		background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-float);
+		padding: 5px; display: none;
+	}
+	.popover.open { display: block; }
+	.popover button {
+		display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 8px 9px;
+		border: none; background: none; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--fg);
+	}
+	.popover button:hover { background: var(--primary-wash); }
+	.popover button.danger { color: var(--destructive); }
+	.popover button.danger:hover { background: var(--destructive-wash); }
+
+	/* ---- sheet (create/rename group) ---- */
+	.scrim { position: fixed; inset: 0; background: oklch(0 0 0 / 0.42); opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 40; }
+	.scrim.open { opacity: 1; pointer-events: auto; }
+	.sheet {
+		position: fixed; left: 0; right: 0; bottom: 0; max-width: 640px; margin: 0 auto;
+		background: var(--card); border-radius: 18px 18px 0 0; box-shadow: var(--shadow-sheet);
+		padding: 8px 20px 22px; transform: translateY(100%); transition: transform 0.25s cubic-bezier(.32,.72,0,1); z-index: 41;
+	}
+	.sheet.open { transform: translateY(0); }
+	.sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 8px auto 14px; }
+	.sheet h3 { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+	.sheet p.desc { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; }
+	.field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; }
+	.field input[type="text"] {
+		width: 100%; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg);
+		color: var(--fg); font-size: 14px;
+	}
+	.sheet-actions { margin-top: 18px; display: flex; gap: 8px; }
+	.sheet-actions .btn { flex: 1; justify-content: center; padding: 10px; }
+	.btn-ghost { background: var(--bg); border: 1px solid var(--border); color: var(--fg); }
+
+	/* ---- confirm dialog ---- */
+	.confirm {
+		position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.96); width: min(360px, calc(100vw - 32px));
+		background: var(--card); border-radius: 14px; box-shadow: var(--shadow-float); padding: 20px; z-index: 51;
+		opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease;
+	}
+	.confirm.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+	.confirm h3 { font-size: 15px; margin-bottom: 6px; }
+	.confirm p { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
+	.confirm .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+	.btn-danger { background: var(--destructive); color: white; }
+
+	.toast {
+		position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--fg); color: var(--bg);
+		padding: 9px 16px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 600; z-index: 60;
+		opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; white-space: nowrap;
+	}
+	.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+	.proto-flag {
+		position: fixed; top: 10px; right: 10px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+		background: var(--fg); color: var(--bg); padding: 4px 9px; border-radius: var(--radius-pill); opacity: 0.55;
+		text-transform: uppercase; z-index: 5;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+	}
+</style>
+
+<div class="proto-flag">Protótipo · sem persistência</div>
+
+<div class="app">
+	<div class="topbar">
+		<button class="icon-btn" aria-label="Voltar" type="button">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+		</button>
+		<div class="topbar-title">
+			<h1>minha primeira lista de co…</h1>
+			<div class="topbar-meta">
+				<span class="chip" id="item-count-chip">15 itens</span>
+				<span class="dot"></span>
+				<span>Orçamento: <strong style="color:var(--fg)">R$ 350,00</strong></span>
+			</div>
+		</div>
+		<button class="icon-btn" aria-label="Mais opções" type="button">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg>
+		</button>
+	</div>
+
+	<div class="summary">
+		<div class="summary-row">
+			<span><strong id="checked-count">0</strong> de <span id="total-count">15</span> itens comprados</span>
+			<strong id="progress-pct">0%</strong>
+		</div>
+		<div class="progress-track"><div class="progress-fill tabular" id="progress-fill" style="width:0%"></div></div>
+		<div class="summary-totals">
+			<div>
+				<div class="label">Total da compra</div>
+				<div class="value tabular" id="purchased-total">R$ 0,00</div>
+			</div>
+			<div>
+				<div class="label">Total estimado</div>
+				<div class="value tabular" id="estimated-total">R$ 0,00</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="items-header">
+		<h2>Itens</h2>
+		<div class="actions">
+			<button class="btn btn-outline labeled" id="btn-new-group" type="button" title="Criar grupo">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6M9 13h6"/></svg>
+				Criar grupo
+			</button>
+			<button class="btn btn-primary" id="btn-add-item" type="button">Adicionar item</button>
+			<button class="icon-btn" aria-label="Reordenar itens" type="button">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></svg>
+			</button>
+		</div>
+	</div>
+
+	<div class="feature-hint" id="feature-hint">
+		<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+		<span><b>Recurso opcional.</b> Crie um grupo pra organizar os itens pendentes por corredor/categoria. Sem grupos, a lista continua exatamente como hoje.</span>
+	</div>
+
+	<div id="pending-section" class="section">
+		<div class="section-head">
+			<span class="status-dot" style="background:var(--muted-2)"></span>
+			<h3>Pendentes</h3>
+			<span class="count" id="pending-count">· 15</span>
+		</div>
+		<div id="pending-body"></div>
+	</div>
+
+	<div id="checked-section" class="section" hidden>
+		<div class="section-head">
+			<span class="status-dot" style="background:var(--success)"></span>
+			<h3>Comprados</h3>
+			<span class="count" id="checked-count-label">· 0</span>
+		</div>
+		<div class="plain-list" id="checked-body"></div>
+	</div>
+
+	<div id="home-section" class="section" hidden>
+		<div class="section-head">
+			<span class="status-dot" style="background:var(--warning)"></span>
+			<h3>Tenho em casa</h3>
+			<span class="count" id="home-count-label">· 0</span>
+		</div>
+		<div class="plain-list" id="home-body"></div>
+	</div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="group-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+	<div class="sheet-handle"></div>
+	<h3 id="sheet-title">Criar grupo</h3>
+	<p class="desc">Dê um nome pro grupo. Você move os itens pra dentro dele arrastando.</p>
+	<form id="group-form">
+		<div class="field">
+			<label for="group-name-input">Nome</label>
+			<input type="text" id="group-name-input" placeholder="Ex: Hortifruti" maxlength="40" autocomplete="off" />
+		</div>
+		<div class="sheet-actions">
+			<button type="button" class="btn btn-ghost" id="sheet-cancel">Cancelar</button>
+			<button type="submit" class="btn btn-primary" id="sheet-submit">Criar grupo</button>
+		</div>
+	</form>
+</div>
+
+<div class="scrim" id="confirm-scrim"></div>
+<div class="confirm" id="confirm-dialog" role="alertdialog" aria-modal="true">
+	<h3 id="confirm-title">Remover grupo?</h3>
+	<p id="confirm-desc">Os itens voltam pra lista solta, sem agrupamento.</p>
+	<div class="row-actions">
+		<button class="btn btn-ghost" id="confirm-cancel" type="button">Cancelar</button>
+		<button class="btn btn-danger" id="confirm-ok" type="button">Remover</button>
+	</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------------
+ * Estado (fake, em memória — protótipo não persiste nada)
+ * ------------------------------------------------------------------- */
+let uid = 1;
+const nextId = (prefix) => `${prefix}-${uid++}`;
+
+const state = {
+	groups: [], // { id, name, order, collapsed }
+	items: [],  // { id, name, qty, unit, price, status: 'pending'|'checked'|'home', groupId, order }
+};
+
+function seed() {
+	const raw = [
+		["Arroz", 1, "kg", 24.9],
+		["Feijão", 1, "kg", 8.5],
+		["Macarrão", 2, "un", 5.9],
+		["Banana", 1, "kg", 6.4],
+		["Maçã", 1, "kg", 9.8],
+		["Tomate", 1, "kg", 7.2],
+		["Alface", 1, "un", 3.5],
+		["Leite", 6, "un", 5.3],
+		["Queijo mussarela", 1, "kg", 42.0],
+		["Iogurte", 4, "un", 4.2],
+		["Detergente", 2, "un", 2.8],
+		["Sabão em pó", 1, "kg", 18.9],
+		["Papel higiênico", 1, "pct", 22.5],
+		["Café", 1, "kg", 26.0],
+		["Açúcar", 1, "kg", 6.1],
+	];
+	state.items = raw.map(([name, qty, unit, price], i) => ({
+		id: nextId("item"),
+		name, qty, unit, price,
+		status: "pending",
+		groupId: null,
+		order: i,
+	}));
+}
+seed();
+
+/* ---------------------------------------------------------------------
+ * Utils
+ * ------------------------------------------------------------------- */
+const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const fmt = (n) => BRL.format(n);
+const lineTotal = (item) => item.qty * item.price;
+
+function byOrder(a, b) { return a.order - b.order; }
+
+function pendingItems() { return state.items.filter((i) => i.status === "pending").sort(byOrder); }
+function checkedItems() { return state.items.filter((i) => i.status === "checked").sort(byOrder); }
+function homeItems() { return state.items.filter((i) => i.status === "home").sort(byOrder); }
+
+function groupTotal(groupId) {
+	return state.items
+		.filter((i) => i.groupId === groupId && i.status !== "home")
+		.reduce((sum, i) => sum + lineTotal(i), 0);
+}
+
+function showToast(msg) {
+	const el = document.getElementById("toast");
+	el.textContent = msg;
+	el.classList.add("show");
+	clearTimeout(showToast._t);
+	showToast._t = setTimeout(() => el.classList.remove("show"), 1700);
+}
+
+function svgIcon(name) {
+	const icons = {
+		grip: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+		check: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+		home: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
+		chevron: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+		kebab: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>',
+		folder: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+		pencil: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+		trash: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>',
+	};
+	return icons[name] || "";
+}
+
+/* ---------------------------------------------------------------------
+ * Render
+ * ------------------------------------------------------------------- */
+function render() {
+	renderSummary();
+	renderPending();
+	renderStatusSection("checked", checkedItems(), "checked-section", "checked-body", "checked-count-label");
+	renderStatusSection("home", homeItems(), "home-section", "home-body", "home-count-label");
+	document.getElementById("item-count-chip").textContent = `${state.items.length} itens`;
+	document.getElementById("total-count").textContent = state.items.length;
+	document.getElementById("feature-hint").hidden = state.groups.length > 0;
+}
+
+function renderSummary() {
+	const checked = checkedItems();
+	const nonHome = state.items.filter((i) => i.status !== "home");
+	const purchasedTotal = checked.reduce((s, i) => s + lineTotal(i), 0);
+	const estimatedTotal = nonHome.reduce((s, i) => s + lineTotal(i), 0);
+	const activeCount = nonHome.length;
+	const pct = activeCount === 0 ? 0 : Math.round((checked.length / activeCount) * 100);
+
+	document.getElementById("checked-count").textContent = checked.length;
+	document.getElementById("progress-pct").textContent = `${pct}%`;
+	document.getElementById("progress-fill").style.width = `${pct}%`;
+	document.getElementById("purchased-total").textContent = fmt(purchasedTotal);
+	document.getElementById("estimated-total").textContent = fmt(estimatedTotal);
+}
+
+function rowEl(item) {
+	const row = document.createElement("div");
+	row.className = "row";
+	row.dataset.itemId = item.id;
+	if (item.status === "checked") row.classList.add("is-checked");
+	if (item.status === "home") row.classList.add("is-home");
+
+	const draggable = item.status === "pending";
+
+	row.innerHTML = `
+		${draggable
+			? `<button type="button" class="drag-handle" data-drag-handle aria-label="Arrastar ${item.name}">${svgIcon("grip")}</button>`
+			: `<span style="width:20px;flex-shrink:0" aria-hidden="true"></span>`}
+		<button type="button" class="status-toggle" data-status="${item.status === "checked" ? "checked" : item.status === "home" ? "home" : "pending"}" data-action="toggle-status" aria-label="Alterar status de ${item.name}">
+			${item.status === "checked" ? svgIcon("check") : item.status === "home" ? svgIcon("home") : ""}
+		</button>
+		<div class="row-main">
+			<span class="row-name">${item.name}</span>
+			<span class="qty-badge">${item.qty} ${item.unit}</span>
+		</div>
+		<div class="row-price">
+			<span class="unit tabular">${fmt(item.price)}</span>
+			<span class="total tabular">${fmt(lineTotal(item))}</span>
+		</div>
+	`;
+	return row;
+}
+
+function renderStatusSection(status, items, sectionId, bodyId, countId) {
+	const section = document.getElementById(sectionId);
+	const body = document.getElementById(bodyId);
+	section.hidden = items.length === 0;
+	document.getElementById(countId).textContent = `· ${items.length}`;
+	body.innerHTML = "";
+	items.forEach((item) => body.appendChild(rowEl(item)));
+}
+
+function renderPending() {
+	const body = document.getElementById("pending-body");
+	const items = pendingItems();
+	document.getElementById("pending-count").textContent = `· ${items.length}`;
+	body.innerHTML = "";
+
+	if (state.groups.length === 0) {
+		// Sem grupos: lista plana idêntica ao app hoje.
+		const wrap = document.createElement("div");
+		wrap.className = "plain-list";
+		wrap.id = "flat-drop-zone";
+		wrap.dataset.container = "ungrouped";
+		items.forEach((item) => wrap.appendChild(rowEl(item)));
+		body.appendChild(wrap);
+		return;
+	}
+
+	const groups = [...state.groups].sort((a, b) => a.order - b.order);
+	groups.forEach((group) => {
+		const groupItems = items.filter((i) => i.groupId === group.id).sort(byOrder);
+		body.appendChild(groupEl(group, groupItems));
+	});
+
+	const ungrouped = items.filter((i) => i.groupId === null).sort(byOrder);
+	const label = document.createElement("div");
+	label.className = "ungrouped-label";
+	label.innerHTML = `${svgIcon("folder")} Sem grupo <span style="font-weight:600;color:var(--muted-2)">· ${ungrouped.length}</span>`;
+	body.appendChild(label);
+
+	const zone = document.createElement("div");
+	zone.className = "ungrouped-zone" + (ungrouped.length === 0 ? " empty" : "");
+	zone.dataset.container = "ungrouped";
+	ungrouped.forEach((item) => zone.appendChild(rowEl(item)));
+	body.appendChild(zone);
+}
+
+function groupEl(group, items) {
+	const el = document.createElement("div");
+	el.className = "group" + (group.collapsed ? " collapsed" : "");
+	el.dataset.groupId = group.id;
+	el.dataset.collapsed = String(!!group.collapsed);
+
+	el.innerHTML = `
+		<div class="group-head" data-action="toggle-collapse">
+			<span class="chevron">${svgIcon("chevron")}</span>
+			<div class="group-name-wrap">
+				<span class="group-name">${group.name}</span>
+				<span class="group-count">${items.length} ${items.length === 1 ? "item" : "itens"}</span>
+			</div>
+			<span class="group-total tabular">${fmt(groupTotal(group.id))}</span>
+			<div class="group-menu-wrap">
+				<button type="button" class="icon-btn" data-action="open-group-menu" aria-label="Opções do grupo ${group.name}" style="width:28px;height:28px">${svgIcon("kebab")}</button>
+				<div class="popover" data-group-popover>
+					<button type="button" data-action="rename-group">${svgIcon("pencil")} Renomear</button>
+					<button type="button" class="danger" data-action="delete-group">${svgIcon("trash")} Remover grupo</button>
+				</div>
+			</div>
+		</div>
+		<div class="group-body${items.length === 0 ? " empty" : ""}" data-container="${group.id}"></div>
+	`;
+
+	const bodyEl = el.querySelector(".group-body");
+	items.forEach((item) => bodyEl.appendChild(rowEl(item)));
+
+	return el;
+}
+
+/* ---------------------------------------------------------------------
+ * Ações de item / grupo
+ * ------------------------------------------------------------------- */
+const NEXT_STATUS = { pending: "checked", checked: "home", home: "pending" };
+
+function toggleItemStatus(itemId) {
+	const item = state.items.find((i) => i.id === itemId);
+	if (!item) return;
+	item.status = NEXT_STATUS[item.status];
+	render();
+}
+
+function openGroupSheet(mode, group) {
+	const sheet = document.getElementById("group-sheet");
+	const scrim = document.getElementById("scrim");
+	const input = document.getElementById("group-name-input");
+	document.getElementById("sheet-title").textContent = mode === "create" ? "Criar grupo" : "Renomear grupo";
+	document.getElementById("sheet-submit").textContent = mode === "create" ? "Criar grupo" : "Salvar";
+	sheet.dataset.mode = mode;
+	sheet.dataset.groupId = group ? group.id : "";
+	input.value = group ? group.name : "";
+	scrim.classList.add("open");
+	sheet.classList.add("open");
+	setTimeout(() => input.focus(), 220);
+}
+
+function closeGroupSheet() {
+	document.getElementById("scrim").classList.remove("open");
+	document.getElementById("group-sheet").classList.remove("open");
+}
+
+function submitGroupSheet(event) {
+	event.preventDefault();
+	const sheet = document.getElementById("group-sheet");
+	const name = document.getElementById("group-name-input").value.trim();
+	if (!name) return;
+
+	if (sheet.dataset.mode === "create") {
+		state.groups.push({ id: nextId("group"), name, order: state.groups.length, collapsed: false });
+		showToast(`Grupo "${name}" criado`);
+	} else {
+		const group = state.groups.find((g) => g.id === sheet.dataset.groupId);
+		if (group) group.name = name;
+		showToast("Grupo renomeado");
+	}
+	closeGroupSheet();
+	render();
+}
+
+let pendingDeleteGroupId = null;
+function askDeleteGroup(groupId) {
+	pendingDeleteGroupId = groupId;
+	document.getElementById("confirm-scrim").classList.add("open");
+	document.getElementById("confirm-dialog").classList.add("open");
+}
+function closeConfirm() {
+	document.getElementById("confirm-scrim").classList.remove("open");
+	document.getElementById("confirm-dialog").classList.remove("open");
+	pendingDeleteGroupId = null;
+}
+function confirmDeleteGroup() {
+	if (!pendingDeleteGroupId) return closeConfirm();
+	const group = state.groups.find((g) => g.id === pendingDeleteGroupId);
+	state.groups = state.groups.filter((g) => g.id !== pendingDeleteGroupId);
+	state.items.forEach((i) => { if (i.groupId === pendingDeleteGroupId) i.groupId = null; });
+	closeConfirm();
+	render();
+	if (group) showToast(`Grupo "${group.name}" removido — itens voltaram pra lista solta`);
+}
+
+function closeAllPopovers() {
+	document.querySelectorAll(".popover.open").forEach((p) => p.classList.remove("open"));
+}
+
+/* ---------------------------------------------------------------------
+ * Delegação de eventos (clique)
+ * ------------------------------------------------------------------- */
+document.addEventListener("click", (event) => {
+	const toggle = event.target.closest('[data-action="toggle-status"]');
+	if (toggle) {
+		const row = toggle.closest(".row");
+		toggleItemStatus(row.dataset.itemId);
+		return;
+	}
+
+	const collapseHead = event.target.closest('[data-action="toggle-collapse"]');
+	if (collapseHead && !event.target.closest(".group-menu-wrap")) {
+		const groupEl = collapseHead.closest(".group");
+		const group = state.groups.find((g) => g.id === groupEl.dataset.groupId);
+		if (group) {
+			group.collapsed = !group.collapsed;
+			render();
+		}
+		return;
+	}
+
+	const menuBtn = event.target.closest('[data-action="open-group-menu"]');
+	if (menuBtn) {
+		const pop = menuBtn.nextElementSibling;
+		const wasOpen = pop.classList.contains("open");
+		closeAllPopovers();
+		if (!wasOpen) pop.classList.add("open");
+		return;
+	}
+
+	const renameBtn = event.target.closest('[data-action="rename-group"]');
+	if (renameBtn) {
+		closeAllPopovers();
+		const groupEl = renameBtn.closest(".group");
+		const group = state.groups.find((g) => g.id === groupEl.dataset.groupId);
+		if (group) openGroupSheet("rename", group);
+		return;
+	}
+
+	const deleteBtn = event.target.closest('[data-action="delete-group"]');
+	if (deleteBtn) {
+		closeAllPopovers();
+		const groupEl = deleteBtn.closest(".group");
+		askDeleteGroup(groupEl.dataset.groupId);
+		return;
+	}
+
+	if (!event.target.closest(".group-menu-wrap")) closeAllPopovers();
+});
+
+document.getElementById("btn-new-group").addEventListener("click", () => openGroupSheet("create", null));
+document.getElementById("btn-add-item").addEventListener("click", () => showToast("Protótipo focado em grupos — \"Adicionar item\" não está ativo aqui"));
+document.getElementById("sheet-cancel").addEventListener("click", closeGroupSheet);
+document.getElementById("scrim").addEventListener("click", closeGroupSheet);
+document.getElementById("group-form").addEventListener("submit", submitGroupSheet);
+document.getElementById("confirm-cancel").addEventListener("click", closeConfirm);
+document.getElementById("confirm-scrim").addEventListener("click", closeConfirm);
+document.getElementById("confirm-ok").addEventListener("click", confirmDeleteGroup);
+document.addEventListener("keydown", (e) => {
+	if (e.key !== "Escape") return;
+	closeGroupSheet();
+	closeConfirm();
+	closeAllPopovers();
+});
+
+/* ---------------------------------------------------------------------
+ * Drag-and-drop multi-container (pointer events)
+ * Cada container tem [data-container="<groupId>|ungrouped"].
+ * Ao soltar: reatribui groupId do item + recalcula `order` de origem e destino.
+ * ------------------------------------------------------------------- */
+let drag = null; // { itemId, ghost, sourceContainer }
+
+function containerItems(containerKey) {
+	if (containerKey === "ungrouped") return pendingItems().filter((i) => i.groupId === null).sort(byOrder);
+	return pendingItems().filter((i) => i.groupId === containerKey).sort(byOrder);
+}
+
+function clearDropTargets() {
+	document.querySelectorAll(".drop-target").forEach((el) => el.classList.remove("drop-target"));
+	document.querySelectorAll(".insert-line").forEach((el) => el.remove());
+}
+
+function startDrag(itemId, pointerX, pointerY, handleEl) {
+	const rowEl = handleEl.closest(".row");
+	const rect = rowEl.getBoundingClientRect();
+	const ghost = rowEl.cloneNode(true);
+	ghost.style.position = "fixed";
+	ghost.style.left = rect.left + "px";
+	ghost.style.top = rect.top + "px";
+	ghost.style.width = rect.width + "px";
+	ghost.style.zIndex = "80";
+	ghost.style.pointerEvents = "none";
+	ghost.style.boxShadow = "var(--shadow-float)";
+	ghost.style.borderRadius = "var(--radius-row)";
+	ghost.style.background = "var(--card)";
+	document.body.appendChild(ghost);
+
+	rowEl.classList.add("dragging");
+
+	drag = {
+		itemId,
+		ghost,
+		offsetX: pointerX - rect.left,
+		offsetY: pointerY - rect.top,
+	};
+}
+
+function moveDragGhost(x, y) {
+	if (!drag) return;
+	drag.ghost.style.left = x - drag.offsetX + "px";
+	drag.ghost.style.top = y - drag.offsetY + "px";
+}
+
+function findDropContainerAt(x, y) {
+	const els = document.elementsFromPoint(x, y);
+	for (const el of els) {
+		const container = el.closest("[data-container]");
+		if (container) return container;
+	}
+	return null;
+}
+
+function updateDropIndicator(x, y) {
+	clearDropTargets();
+	const container = findDropContainerAt(x, y);
+	if (!container) return null;
+	container.classList.add("drop-target");
+
+	const rows = [...container.querySelectorAll(".row:not(.dragging)")];
+	let before = null;
+	for (const row of rows) {
+		const r = row.getBoundingClientRect();
+		if (y < r.top + r.height / 2) { before = row; break; }
+	}
+
+	const line = document.createElement("div");
+	line.className = "insert-line";
+	if (before) container.insertBefore(line, before);
+	else container.appendChild(line);
+
+	return { containerKey: container.dataset.container, beforeItemId: before ? before.dataset.itemId : null };
+}
+
+function endDrag(dropInfo) {
+	if (!drag) return;
+	const { itemId, ghost } = drag;
+	ghost.remove();
+	clearDropTargets();
+	drag = null;
+
+	if (!dropInfo) { render(); return; }
+
+	const item = state.items.find((i) => i.id === itemId);
+	if (!item) return;
+
+	const targetGroupId = dropInfo.containerKey === "ungrouped" ? null : dropInfo.containerKey;
+	const targetItems = containerItems(dropInfo.containerKey).filter((i) => i.id !== itemId);
+	const insertIndex = dropInfo.beforeItemId
+		? targetItems.findIndex((i) => i.id === dropInfo.beforeItemId)
+		: targetItems.length;
+	const finalIndex = insertIndex === -1 ? targetItems.length : insertIndex;
+
+	targetItems.splice(finalIndex, 0, item);
+	item.groupId = targetGroupId;
+	targetItems.forEach((it, idx) => { it.order = idx; });
+
+	render();
+}
+
+document.addEventListener("pointerdown", (event) => {
+	const handle = event.target.closest("[data-drag-handle]");
+	if (!handle) return;
+	event.preventDefault();
+	const row = handle.closest(".row");
+	const itemId = row.dataset.itemId;
+	startDrag(itemId, event.clientX, event.clientY, handle);
+
+	const onMove = (e) => {
+		if (!drag) return;
+		moveDragGhost(e.clientX, e.clientY);
+		updateDropIndicator(e.clientX, e.clientY);
+	};
+	const onUp = (e) => {
+		document.removeEventListener("pointermove", onMove);
+		document.removeEventListener("pointerup", onUp);
+		document.removeEventListener("pointercancel", onUp);
+		const dropInfo = updateDropIndicator(e.clientX, e.clientY);
+		endDrag(dropInfo);
+	};
+
+	document.addEventListener("pointermove", onMove);
+	document.addEventListener("pointerup", onUp);
+	document.addEventListener("pointercancel", onUp);
+});
+
+render();
+</script>
