@@ -5,6 +5,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useState } from "react";
 
+import { ItemRow } from "~/domains/shopping-list-items/components/item-row";
 import { SortableItemRow } from "~/domains/shopping-list-items/components/sortable-item-list";
 import type {
 	ItemStatus,
@@ -29,6 +30,9 @@ import { cn, formatCurrency } from "~/shared/lib/utils";
 interface GroupSectionProps {
 	group: ShoppingGroup;
 	items: ShoppingItem[];
+	// Itens do grupo já comprados/tenho em casa — não arrastáveis, só exibidos
+	// (riscado/atenuado) pra não sumirem do grupo quando o status muda.
+	settledItems: ShoppingItem[];
 	allItems: ShoppingItem[];
 	onToggleCollapsed: (groupId: string) => void;
 	onRename: (group: ShoppingGroup) => void;
@@ -41,6 +45,7 @@ interface GroupSectionProps {
 export function GroupSection({
 	group,
 	items,
+	settledItems,
 	allItems,
 	onToggleCollapsed,
 	onRename,
@@ -52,6 +57,7 @@ export function GroupSection({
 	const { setNodeRef, isOver } = useDroppable({ id: group.id });
 	const [menuOpen, setMenuOpen] = useState(false);
 	const total = getGroupTotal(allItems, group.id);
+	const totalCount = items.length + settledItems.length;
 
 	return (
 		<div className="mb-2.5 overflow-hidden rounded-lg border bg-card">
@@ -74,7 +80,7 @@ export function GroupSection({
 				<div className="flex min-w-0 flex-1 items-baseline gap-2">
 					<span className="truncate font-bold text-sm">{group.name}</span>
 					<span className="shrink-0 text-muted-foreground text-xs">
-						{items.length} {items.length === 1 ? "item" : "itens"}
+						{totalCount} {totalCount === 1 ? "item" : "itens"}
 					</span>
 				</div>
 				<span className="shrink-0 font-semibold text-sm">
@@ -125,7 +131,7 @@ export function GroupSection({
 						items={items.map((item) => item.id)}
 						strategy={verticalListSortingStrategy}
 					>
-						{items.length === 0 ? (
+						{items.length === 0 && settledItems.length === 0 ? (
 							<p className="px-3 py-3.5 text-center text-muted-foreground/70 text-xs italic">
 								Arraste itens pendentes pra cá
 							</p>
@@ -141,6 +147,16 @@ export function GroupSection({
 							))
 						)}
 					</SortableContext>
+
+					{settledItems.map((item) => (
+						<ItemRow
+							key={item.id}
+							item={item}
+							onStatusChange={(status) => onStatusChange(item.id, status)}
+							onEdit={(editTarget) => onEditItem(item.id, editTarget)}
+							onDelete={() => onDeleteItem(item.id)}
+						/>
+					))}
 				</div>
 			)}
 		</div>

@@ -253,6 +253,12 @@ export function GroupedPendingBoard({
 					items={(containers[group.id] ?? [])
 						.map((id) => itemsById.get(id))
 						.filter((item): item is ShoppingItem => item !== undefined)}
+					settledItems={allItems
+						.filter(
+							(item) =>
+								item.groupId === group.id && item.status !== "unchecked",
+						)
+						.sort((a, b) => a.order - b.order)}
 					allItems={allItems}
 					onToggleCollapsed={onToggleCollapsed}
 					onRename={onRenameGroup}
