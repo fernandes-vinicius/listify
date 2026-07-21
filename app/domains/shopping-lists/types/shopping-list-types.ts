@@ -1,4 +1,7 @@
-import type { ShoppingItem } from "~/domains/shopping-list-items";
+import type {
+	ShoppingGroup,
+	ShoppingItem,
+} from "~/domains/shopping-list-items";
 
 export interface ShoppingList {
 	id: string;
@@ -9,4 +12,7 @@ export interface ShoppingList {
 	createdAt: string;
 	updatedAt: string;
 	items: ShoppingItem[];
+	// Grupos (acordeão) opcionais dentro da seção "Pendentes" — lista vazia é
+	// o estado padrão/mais comum (recurso opt-in).
+	groups: ShoppingGroup[];
 }

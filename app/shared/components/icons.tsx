@@ -1,3 +1,4 @@
+export type { LucideIcon } from "lucide-react";
 export {
 	ArrowDownAZ,
 	ArrowDownZA,
@@ -6,12 +7,15 @@ export {
 	Camera,
 	Check,
 	CheckIcon,
+	ChevronDown,
 	ChevronLeft,
 	ChevronRightIcon,
 	Circle,
 	CircleCheckIcon,
 	DotIcon,
 	Download,
+	Folder,
+	FolderPlus,
 	GripVertical,
 	Home,
 	InfoIcon,
@@ -23,6 +27,7 @@ export {
 	OctagonXIcon,
 	Pencil,
 	Plus,
+	PlusIcon,
 	Search,
 	Share,
 	ShoppingBasket,
@@ -33,4 +38,3 @@ export {
 	X,
 	XIcon,
 } from "lucide-react";
-export type { LucideIcon } from "lucide-react";

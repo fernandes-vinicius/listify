@@ -4,23 +4,37 @@ import { Link, redirect } from "react-router";
 
 import {
 	addItem,
+	createGroup,
+	DeleteGroupDialog,
+	deleteGroup,
 	deleteItem,
+	GroupedPendingBoard,
+	GroupFormDialog,
 	getListTotals,
+	groupFormSchema,
 	ItemFormDrawer,
+	type ItemPlacement,
 	ItemPriceEditDrawer,
 	ItemSection,
 	type ItemStatus,
 	ItemsSortMenu,
 	itemFormSchema,
 	ListTotalsSummary,
+	renameGroup,
 	reorderItems,
+	type ShoppingGroup,
 	setAllItemsStatus,
 	setItemStatus,
 	sortItemsByName,
+	toggleGroupCollapsed,
 	updateItem,
+	updateItemPlacements,
+	useDeleteGroup,
 	useDeleteItem,
+	useMoveItems,
 	useReorderItems,
 	useSetAllItemsStatus,
+	useToggleGroupCollapsed,
 	useToggleItemStatus,
 } from "~/domains/shopping-list-items";
 import {
@@ -40,8 +54,10 @@ import {
 	ChevronLeft,
 	Circle,
 	DotIcon,
+	FolderPlus,
 	MoreVertical,
 	Pencil,
+	PlusIcon,
 	Trash2,
 } from "~/shared/components/icons";
 import { Badge } from "~/shared/components/ui/badge";
@@ -55,7 +71,18 @@ import {
 } from "~/shared/components/ui/dropdown-menu";
 import { readStorage, writeStorage } from "~/shared/lib/storage";
 import { cn, formatCurrency } from "~/shared/lib/utils";
+
 import type { Route } from "./+types/lists.$listId";
+
+function isItemPlacement(value: unknown): value is ItemPlacement {
+	if (!value || typeof value !== "object") return false;
+	const placement = value as Record<string, unknown>;
+	return (
+		typeof placement.itemId === "string" &&
+		(placement.groupId === null || typeof placement.groupId === "string") &&
+		typeof placement.order === "number"
+	);
+}
 
 export function meta({ loaderData }: Route.MetaArgs) {
 	return [
@@ -170,6 +197,56 @@ export async function clientAction({
 			writeStorage(next);
 			return null;
 		}
+		case "create-group": {
+			const submission = parseWithZod(formData, { schema: groupFormSchema });
+			if (submission.status !== "success") return submission.reply();
+
+			const { storage: next } = createGroup(
+				storage,
+				listId,
+				submission.value.name,
+			);
+			writeStorage(next);
+			return submission.reply();
+		}
+		case "rename-group": {
+			const submission = parseWithZod(formData, { schema: groupFormSchema });
+			if (submission.status !== "success") return submission.reply();
+
+			const groupId = String(formData.get("groupId") ?? "");
+			if (!groupId) return submission.reply();
+
+			const next = renameGroup(storage, listId, groupId, submission.value.name);
+			writeStorage(next);
+			return submission.reply();
+		}
+		case "delete-group": {
+			const groupId = String(formData.get("groupId") ?? "");
+			if (!groupId) return null;
+			const next = deleteGroup(storage, listId, groupId);
+			writeStorage(next);
+			return null;
+		}
+		case "toggle-group-collapsed": {
+			const groupId = String(formData.get("groupId") ?? "");
+			if (!groupId) return null;
+			const next = toggleGroupCollapsed(storage, listId, groupId);
+			writeStorage(next);
+			return null;
+		}
+		case "move-items": {
+			let parsed: unknown;
+			try {
+				parsed = JSON.parse(String(formData.get("placements") ?? "[]"));
+			} catch {
+				return null;
+			}
+			if (!Array.isArray(parsed) || !parsed.every(isItemPlacement)) return null;
+
+			const next = updateItemPlacements(storage, listId, parsed);
+			writeStorage(next);
+			return null;
+		}
 		default:
 			return null;
 	}
@@ -183,12 +260,23 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const { reorderItems: submitReorder } = useReorderItems();
 	const { setAllItemsStatus: submitAllStatus } = useSetAllItemsStatus();
 	const { deleteShoppingList: deleteList } = useDeleteShoppingList();
+	const { deleteGroup: submitDeleteGroup } = useDeleteGroup();
+	const { toggleGroupCollapsed: submitToggleGroupCollapsed } =
+		useToggleGroupCollapsed();
+	const { moveItems: submitMoveItems } = useMoveItems();
 
 	const [isEditOpen, setEditOpen] = useState(false);
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
 	const [isAddOpen, setAddOpen] = useState(false);
 	const [editingItemId, setEditingItemId] = useState<string | null>(null);
 	const [editTarget, setEditTarget] = useState<"price" | undefined>(undefined);
+	const [isCreateGroupOpen, setCreateGroupOpen] = useState(false);
+	const [renamingGroup, setRenamingGroup] = useState<ShoppingGroup | null>(
+		null,
+	);
+	const [deletingGroup, setDeletingGroup] = useState<ShoppingGroup | null>(
+		null,
+	);
 
 	function handleEditItem(itemId: string, target?: "price") {
 		setEditingItemId(itemId);
@@ -293,10 +381,24 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 			<ListTotalsSummary items={list.items} />
 			{/* <BudgetAlert budget={list.budget} items={list.items} /> */}
 
-			<div className="mt-6 mb-4 flex items-center justify-between">
+			<div className="mt-6 mb-4 flex flex-wrap items-center justify-between gap-2">
 				<h2 className="font-semibold text-lg tracking-tight">Itens</h2>
 				<div className="flex items-center gap-1.5">
-					<Button onClick={() => setAddOpen(true)}>Adicionar item</Button>
+					<Button onClick={() => setAddOpen(true)}>
+						<PlusIcon />
+						Adicionar item
+					</Button>
+					<Button
+						variant="outline"
+						size="icon-sm"
+						className="w-8 gap-1.5 px-0 sm:w-auto sm:px-3"
+						disabled={list.items.length === 0}
+						onClick={() => setCreateGroupOpen(true)}
+						aria-label="Criar grupo"
+					>
+						<FolderPlus />
+						<span className="hidden sm:inline">Criar grupo</span>
+					</Button>
 					<ItemsSortMenu disabled={list.items.length === 0} />
 				</div>
 			</div>
@@ -310,15 +412,46 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 				</div>
 			) : (
 				<>
-					<ItemSection
-						status="unchecked"
-						items={uncheckedItems}
-						sortable
-						onReorder={(itemIds) => submitReorder(itemIds)}
-						onStatusChange={(itemId, status) => submitStatus(itemId, status)}
-						onEditItem={handleEditItem}
-						onDeleteItem={submitDeleteItem}
-					/>
+					{list.groups.length > 0 ? (
+						<section className="mb-5">
+							<div className="mb-2.5 flex items-center gap-2 px-0.5">
+								<span
+									className="size-2 shrink-0 rounded-full bg-muted-foreground/50"
+									aria-hidden="true"
+								/>
+								<h3 className="font-bold text-muted-foreground text-xs uppercase tracking-wide">
+									Pendentes
+								</h3>
+								<span className="font-semibold text-muted-foreground/60 text-xs">
+									· {uncheckedItems.length}
+								</span>
+							</div>
+							<GroupedPendingBoard
+								groups={list.groups}
+								items={uncheckedItems}
+								allItems={list.items}
+								onToggleCollapsed={submitToggleGroupCollapsed}
+								onRenameGroup={setRenamingGroup}
+								onDeleteGroup={setDeletingGroup}
+								onMoveItems={submitMoveItems}
+								onStatusChange={(itemId, status) =>
+									submitStatus(itemId, status)
+								}
+								onEditItem={handleEditItem}
+								onDeleteItem={submitDeleteItem}
+							/>
+						</section>
+					) : (
+						<ItemSection
+							status="unchecked"
+							items={uncheckedItems}
+							sortable
+							onReorder={(itemIds) => submitReorder(itemIds)}
+							onStatusChange={(itemId, status) => submitStatus(itemId, status)}
+							onEditItem={handleEditItem}
+							onDeleteItem={submitDeleteItem}
+						/>
+					)}
 					<ItemSection
 						status="checked"
 						items={checkedItems}
@@ -396,6 +529,39 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 				listName={list.name}
 				onConfirm={() => deleteList(list.id)}
 			/>
+
+			<GroupFormDialog
+				open={isCreateGroupOpen}
+				onOpenChange={setCreateGroupOpen}
+				mode="create"
+			/>
+
+			{renamingGroup && (
+				<GroupFormDialog
+					key={renamingGroup.id}
+					open
+					onOpenChange={(open) => {
+						if (!open) setRenamingGroup(null);
+					}}
+					mode="rename"
+					groupId={renamingGroup.id}
+					initialName={renamingGroup.name}
+				/>
+			)}
+
+			{deletingGroup && (
+				<DeleteGroupDialog
+					open
+					onOpenChange={(open) => {
+						if (!open) setDeletingGroup(null);
+					}}
+					groupName={deletingGroup.name}
+					onConfirm={() => {
+						submitDeleteGroup(deletingGroup.id);
+						setDeletingGroup(null);
+					}}
+				/>
+			)}
 		</div>
 	);
 }

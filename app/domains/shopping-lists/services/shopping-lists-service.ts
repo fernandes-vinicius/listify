@@ -11,15 +11,33 @@ export interface AppStorage {
 
 export const EMPTY_STORAGE: AppStorage = { lists: [] };
 
+// Dados salvos antes do recurso de agrupamento não têm `list.groups` nem
+// `item.groupId` — o guard raso de `readStorage` (ver shared/lib/storage.ts)
+// só valida que `storage.lists` é array, não o formato interno de cada
+// lista/item, então listas antigas passam por ele sem esses campos.
+// Normalizamos aqui, num único lugar, pra todo consumidor (rotas, serviços)
+// sempre receber o formato completo e não quebrar em `.map`/`.filter`.
+function normalizeList(list: ShoppingList): ShoppingList {
+	return {
+		...list,
+		groups: list.groups ?? [],
+		items: list.items.map((item) => ({
+			...item,
+			groupId: item.groupId ?? null,
+		})),
+	};
+}
+
 export function getShoppingLists(storage: AppStorage): ShoppingList[] {
-	return storage.lists;
+	return storage.lists.map(normalizeList);
 }
 
 export function getShoppingListById(
 	storage: AppStorage,
 	id: string,
 ): ShoppingList | undefined {
-	return storage.lists.find((list) => list.id === id);
+	const list = storage.lists.find((list) => list.id === id);
+	return list ? normalizeList(list) : undefined;
 }
 
 export function createShoppingList(
@@ -35,6 +53,7 @@ export function createShoppingList(
 		createdAt: now,
 		updatedAt: now,
 		items: [],
+		groups: [],
 	};
 
 	return { storage: { lists: [...storage.lists, list] }, list };
