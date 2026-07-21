@@ -44,6 +44,7 @@ import {
 	EMPTY_STORAGE,
 	getShoppingListById,
 	ListFormDialog,
+	normalizeStorage,
 	shoppingListFormSchema,
 	updateShoppingList,
 	useDeleteShoppingList,
@@ -102,7 +103,7 @@ export async function clientAction({
 	params,
 }: Route.ClientActionArgs) {
 	const listId = params.listId;
-	const storage = readStorage(EMPTY_STORAGE);
+	const storage = normalizeStorage(readStorage(EMPTY_STORAGE));
 	const formData = await request.formData();
 	const intent = formData.get("intent");
 
