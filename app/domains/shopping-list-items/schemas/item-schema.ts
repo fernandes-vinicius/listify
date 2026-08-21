@@ -34,6 +34,13 @@ export const itemFormSchema = z.object({
 		"Preço não pode ser negativo",
 	),
 	status: z.enum(ITEM_STATUSES),
+	// "none" representa "sem grupo" no <Select> — só o modo "editar" renderiza
+	// esse campo, então no "adicionar" ele chega ausente do FormData e cai no
+	// mesmo `null` via `.optional()`.
+	groupId: z
+		.string()
+		.optional()
+		.transform((v) => (v && v !== "none" ? v : null)),
 });
 
 export type ItemFormValues = z.infer<typeof itemFormSchema>;
