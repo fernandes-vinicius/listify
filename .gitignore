@@ -12,3 +12,4 @@ build
 
 # typescript
 *.tsbuildinfo
+.vercel
