@@ -533,6 +533,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 						listName={list.name}
 						itemId={editingItem.id}
 						initialValues={editingItem}
+						groups={list.groups}
 						onDelete={() => {
 							submitDeleteItem(editingItem.id);
 							setEditingItemId(null);

@@ -7,7 +7,10 @@ import { PriceScanButton } from "~/domains/shopping-list-items/components/price-
 import { StatusOptionCard } from "~/domains/shopping-list-items/components/status-option-card";
 import { useItemsSortOrder } from "~/domains/shopping-list-items/hooks/use-items-sort-order";
 import { itemFormSchema } from "~/domains/shopping-list-items/schemas/item-schema";
-import type { ItemStatus } from "~/domains/shopping-list-items/types/item-types";
+import type {
+	ItemStatus,
+	ShoppingGroup,
+} from "~/domains/shopping-list-items/types/item-types";
 import { CurrencyInput } from "~/shared/components/currency-input";
 import { Button } from "~/shared/components/ui/button";
 import {
@@ -18,6 +21,13 @@ import {
 } from "~/shared/components/ui/field";
 import { Input } from "~/shared/components/ui/input";
 import { Label } from "~/shared/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/shared/components/ui/select";
 import {
 	Sheet,
 	SheetContent,
@@ -38,6 +48,7 @@ export interface ItemFormInitialValues {
 	unit: string;
 	price: number;
 	status: ItemStatus;
+	groupId?: string | null;
 }
 
 interface ItemFormDrawerProps {
@@ -47,6 +58,7 @@ interface ItemFormDrawerProps {
 	listName: string;
 	itemId?: string;
 	initialValues?: ItemFormInitialValues;
+	groups?: ShoppingGroup[];
 	onDelete?: () => void;
 }
 
@@ -63,6 +75,7 @@ export function ItemFormDrawer({
 	listName,
 	itemId,
 	initialValues,
+	groups = [],
 	onDelete,
 }: ItemFormDrawerProps) {
 	const fetcher = useFetcher();
@@ -96,6 +109,9 @@ export function ItemFormDrawer({
 	const [price, setPrice] = useState(initialValues?.price ?? 0);
 	const [status, setStatus] = useState<ItemStatus>(
 		initialValues?.status ?? "unchecked",
+	);
+	const [groupId, setGroupId] = useState<string>(
+		initialValues?.groupId ?? "none",
 	);
 	const submitting = fetcher.state !== "idle";
 
@@ -241,6 +257,36 @@ export function ItemFormDrawer({
 										/>
 									))}
 								</div>
+							</Field>
+						)}
+
+						{mode === "edit" && groups.length > 0 && (
+							<Field>
+								<FieldLabel htmlFor="item-group">Grupo (opcional)</FieldLabel>
+								<Select
+									name="groupId"
+									value={groupId}
+									onValueChange={(value) => setGroupId(value ?? "none")}
+									items={[
+										{ label: "Sem grupo", value: "none" },
+										...groups.map((group) => ({
+											label: group.name,
+											value: group.id,
+										})),
+									]}
+								>
+									<SelectTrigger id="item-group" className="w-full">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="none">Sem grupo</SelectItem>
+										{groups.map((group) => (
+											<SelectItem key={group.id} value={group.id}>
+												{group.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</Field>
 						)}
 

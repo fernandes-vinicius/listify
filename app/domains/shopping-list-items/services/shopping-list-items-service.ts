@@ -104,7 +104,7 @@ export function updateItem(
 	storage: StorageShape,
 	listId: string,
 	itemId: string,
-	input: ItemInput & { status: ItemStatus },
+	input: ItemInput & { status: ItemStatus; groupId: string | null },
 ): StorageShape {
 	return {
 		lists: storage.lists.map((list) =>
@@ -122,6 +122,7 @@ export function updateItem(
 										unit: input.unit,
 										price: input.price,
 										status: input.status,
+										groupId: input.groupId,
 									},
 						),
 					},
