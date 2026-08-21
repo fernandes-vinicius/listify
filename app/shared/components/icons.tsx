@@ -21,6 +21,7 @@ export {
 	InfoIcon,
 	Loader2,
 	Loader2Icon,
+	Lock,
 	MonitorIcon,
 	Moon,
 	MoreVertical,
