@@ -1,6 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { PriceScanUnlockDialog } from "~/domains/shopping-list-items/components/price-scan-unlock-dialog";
 import { usePriceScanner } from "~/domains/shopping-list-items/hooks/use-price-scanner";
-import { Camera, Check, Loader2 } from "~/shared/components/icons";
+import { isPriceScanUnlocked } from "~/domains/shopping-list-items/utils/price-scan-unlock";
+import { Camera, Check, Loader2, Lock } from "~/shared/components/icons";
 import { Button } from "~/shared/components/ui/button";
 
 interface PriceScanButtonProps {
@@ -10,9 +12,23 @@ interface PriceScanButtonProps {
 // Botão de câmera pro campo de preço: abre a câmera/galeria nativa, lê o
 // preço da foto via OCR (ver use-price-scanner.ts) e chama `onPriceDetected`
 // — o mesmo `setPrice` que o CurrencyInput já usa manualmente.
+//
+// Recurso restrito por um código de 4 dígitos (ver price-scan-unlock.ts) —
+// enquanto o app não tem contas de usuário, a chave do Gemini usada aqui é
+// compartilhada por todo mundo, então isso funciona como um "cupom" de
+// acesso. Uma vez destravado neste navegador, não pergunta o código de novo.
 export function PriceScanButton({ onPriceDetected }: PriceScanButtonProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const { scanFile, status } = usePriceScanner(onPriceDetected);
+	const [unlockOpen, setUnlockOpen] = useState(false);
+
+	function handleClick() {
+		if (isPriceScanUnlocked()) {
+			inputRef.current?.click();
+		} else {
+			setUnlockOpen(true);
+		}
+	}
 
 	return (
 		<>
@@ -35,16 +51,24 @@ export function PriceScanButton({ onPriceDetected }: PriceScanButtonProps) {
 				size="icon"
 				disabled={status === "processing"}
 				aria-label="Ler preço com a câmera"
-				onClick={() => inputRef.current?.click()}
+				onClick={handleClick}
 			>
 				{status === "processing" ? (
 					<Loader2 className="animate-spin" />
 				) : status === "success" ? (
 					<Check />
-				) : (
+				) : isPriceScanUnlocked() ? (
 					<Camera />
+				) : (
+					<Lock />
 				)}
 			</Button>
+
+			<PriceScanUnlockDialog
+				open={unlockOpen}
+				onOpenChange={setUnlockOpen}
+				onUnlocked={() => inputRef.current?.click()}
+			/>
 		</>
 	);
 }
