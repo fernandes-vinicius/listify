@@ -105,6 +105,34 @@ export function toggleGroupCollapsed(
 	};
 }
 
+// Recebe a ordem final dos grupos e reatribui `order` de acordo — mesma
+// convenção de `reorderItems` (shopping-list-items-service.ts).
+export function reorderGroups(
+	storage: StorageShape,
+	listId: string,
+	orderedGroupIds: string[],
+): StorageShape {
+	const orderIndexById = new Map(
+		orderedGroupIds.map((id, index) => [id, index]),
+	);
+
+	return {
+		lists: storage.lists.map((list) =>
+			list.id !== listId
+				? list
+				: {
+						...list,
+						groups: list.groups.map((group) => {
+							const newOrder = orderIndexById.get(group.id);
+							return newOrder === undefined
+								? group
+								: { ...group, order: newOrder };
+						}),
+					},
+		),
+	};
+}
+
 export interface ItemPlacement {
 	itemId: string;
 	groupId: string | null;

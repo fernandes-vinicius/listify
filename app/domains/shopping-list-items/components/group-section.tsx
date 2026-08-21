@@ -1,8 +1,10 @@
 import { useDroppable } from "@dnd-kit/core";
 import {
 	SortableContext,
+	useSortable,
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
 
 import { ItemRow } from "~/domains/shopping-list-items/components/item-row";
@@ -15,6 +17,7 @@ import type {
 import { getGroupTotal } from "~/domains/shopping-list-items/utils/item-totals";
 import {
 	ChevronDown,
+	GripVertical,
 	MoreVertical,
 	Pencil,
 	Trash2,
@@ -55,12 +58,27 @@ export function GroupSection({
 	onDeleteItem,
 }: GroupSectionProps) {
 	const { setNodeRef, isOver } = useDroppable({ id: group.id });
+	const {
+		attributes: dragAttributes,
+		listeners: dragListeners,
+		setNodeRef: setSortableNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id: `group:${group.id}` });
 	const [menuOpen, setMenuOpen] = useState(false);
 	const total = getGroupTotal(allItems, group.id);
 	const totalCount = items.length + settledItems.length;
 
 	return (
-		<div className="mb-2.5 overflow-hidden rounded-lg border bg-card">
+		<div
+			ref={setSortableNodeRef}
+			style={{ transform: CSS.Transform.toString(transform), transition }}
+			className={cn(
+				"mb-2.5 overflow-hidden rounded-lg border bg-card",
+				isDragging && "opacity-50",
+			)}
+		>
 			{/* biome-ignore lint/a11y/useSemanticElements: <> */}
 			<div
 				role="button"
@@ -71,6 +89,17 @@ export function GroupSection({
 				}}
 				className="flex cursor-pointer items-center gap-2.5 px-3 py-3 hover:bg-muted"
 			>
+				<button
+					type="button"
+					{...dragAttributes}
+					{...dragListeners}
+					onClick={(event) => event.stopPropagation()}
+					className="shrink-0 cursor-grab touch-none text-muted-foreground/40 active:cursor-grabbing"
+					aria-label={`Arrastar para reordenar o grupo ${group.name}`}
+				>
+					<GripVertical className="size-3.5" />
+				</button>
+
 				<ChevronDown
 					className={cn(
 						"size-4 shrink-0 text-muted-foreground transition-transform",
