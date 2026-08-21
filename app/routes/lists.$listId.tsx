@@ -21,6 +21,7 @@ import {
 	itemFormSchema,
 	ListTotalsSummary,
 	renameGroup,
+	reorderGroups,
 	reorderItems,
 	type ShoppingGroup,
 	setAllItemsStatus,
@@ -32,6 +33,7 @@ import {
 	useDeleteGroup,
 	useDeleteItem,
 	useMoveItems,
+	useReorderGroups,
 	useReorderItems,
 	useSetAllItemsStatus,
 	useToggleGroupCollapsed,
@@ -235,6 +237,24 @@ export async function clientAction({
 			writeStorage(next);
 			return null;
 		}
+		case "reorder-groups": {
+			let parsed: unknown;
+			try {
+				parsed = JSON.parse(String(formData.get("groupIds") ?? "[]"));
+			} catch {
+				return null;
+			}
+			if (
+				!Array.isArray(parsed) ||
+				!parsed.every((id) => typeof id === "string")
+			) {
+				return null;
+			}
+
+			const next = reorderGroups(storage, listId, parsed);
+			writeStorage(next);
+			return null;
+		}
 		case "move-items": {
 			let parsed: unknown;
 			try {
@@ -265,6 +285,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const { toggleGroupCollapsed: submitToggleGroupCollapsed } =
 		useToggleGroupCollapsed();
 	const { moveItems: submitMoveItems } = useMoveItems();
+	const { reorderGroups: submitReorderGroups } = useReorderGroups();
 
 	const [isEditOpen, setEditOpen] = useState(false);
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
@@ -440,6 +461,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 								onRenameGroup={setRenamingGroup}
 								onDeleteGroup={setDeletingGroup}
 								onMoveItems={submitMoveItems}
+								onReorderGroups={submitReorderGroups}
 								onStatusChange={(itemId, status) =>
 									submitStatus(itemId, status)
 								}

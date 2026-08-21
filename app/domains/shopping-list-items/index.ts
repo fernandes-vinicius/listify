@@ -13,6 +13,7 @@ export { useItemsSortOrder } from "~/domains/shopping-list-items/hooks/use-items
 export {
 	useDeleteGroup,
 	useMoveItems,
+	useReorderGroups,
 	useToggleGroupCollapsed,
 } from "~/domains/shopping-list-items/hooks/use-shopping-groups";
 export {
@@ -35,6 +36,7 @@ export {
 	deleteGroup,
 	type ItemPlacement,
 	renameGroup,
+	reorderGroups,
 	toggleGroupCollapsed,
 	updateItemPlacements,
 } from "~/domains/shopping-list-items/services/shopping-groups-service";

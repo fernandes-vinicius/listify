@@ -41,3 +41,16 @@ export function useMoveItems() {
 
 	return { moveItems };
 }
+
+export function useReorderGroups() {
+	const fetcher = useFetcher();
+
+	function reorderGroups(groupIds: string[]) {
+		fetcher.submit(
+			{ intent: "reorder-groups", groupIds: JSON.stringify(groupIds) },
+			{ method: "post" },
+		);
+	}
+
+	return { reorderGroups };
+}

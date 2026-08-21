@@ -1,4 +1,5 @@
 import {
+	type CollisionDetection,
 	closestCenter,
 	DndContext,
 	type DragEndEvent,
@@ -27,6 +28,29 @@ import { Folder } from "~/shared/components/icons";
 import { cn } from "~/shared/lib/utils";
 
 const UNGROUPED = "ungrouped" as const;
+const GROUP_DRAG_PREFIX = "group:";
+
+function toGroupDragId(groupId: string): string {
+	return `${GROUP_DRAG_PREFIX}${groupId}`;
+}
+
+function isGroupDragId(id: string): boolean {
+	return id.startsWith(GROUP_DRAG_PREFIX);
+}
+
+// A dropzone de itens de um grupo (`useDroppable({ id: group.id })`) ocupa a
+// mesma área na tela que o card arrastável do grupo (`group:${group.id}`) —
+// sem esse filtro, `closestCenter` pode resolver `over` para a dropzone de
+// itens (id sem prefixo) ao arrastar um cabeçalho de grupo, e o
+// `handleDragEnd` nunca encontraria o índice correspondente. Restringe as
+// colisões ao mesmo "tipo" de arrasto (grupo vs. item/container).
+const groupAwareCollisionDetection: CollisionDetection = (args) => {
+	const activeIsGroup = isGroupDragId(String(args.active.id));
+	const droppableContainers = args.droppableContainers.filter(
+		(container) => isGroupDragId(String(container.id)) === activeIsGroup,
+	);
+	return closestCenter({ ...args, droppableContainers });
+};
 
 interface GroupedPendingBoardProps {
 	groups: ShoppingGroup[];
@@ -36,6 +60,7 @@ interface GroupedPendingBoardProps {
 	onRenameGroup: (group: ShoppingGroup) => void;
 	onDeleteGroup: (group: ShoppingGroup) => void;
 	onMoveItems: (placements: ItemPlacement[]) => void;
+	onReorderGroups: (groupIds: string[]) => void;
 	onStatusChange: (itemId: string, status: ItemStatus) => void;
 	onEditItem: (itemId: string, editTarget?: "price") => void;
 	onDeleteItem: (itemId: string) => void;
@@ -123,6 +148,7 @@ export function GroupedPendingBoard({
 	onRenameGroup,
 	onDeleteGroup,
 	onMoveItems,
+	onReorderGroups,
 	onStatusChange,
 	onEditItem,
 	onDeleteItem,
@@ -164,6 +190,8 @@ export function GroupedPendingBoard({
 		useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
 	);
 
+	const sortedGroups = [...groups].sort((a, b) => a.order - b.order);
+
 	function findContainer(id: string): string | undefined {
 		const current = containersRef.current;
 		if (id in current) return id;
@@ -173,6 +201,7 @@ export function GroupedPendingBoard({
 	function handleDragOver(event: DragOverEvent) {
 		const { active, over } = event;
 		if (!over) return;
+		if (isGroupDragId(String(active.id))) return;
 
 		const activeContainer = findContainer(String(active.id));
 		const overContainer = findContainer(String(over.id));
@@ -206,6 +235,21 @@ export function GroupedPendingBoard({
 		const { active, over } = event;
 		if (!over) return;
 
+		if (isGroupDragId(String(active.id))) {
+			if (active.id === over.id) return;
+			const oldIndex = sortedGroups.findIndex(
+				(group) => toGroupDragId(group.id) === active.id,
+			);
+			const newIndex = sortedGroups.findIndex(
+				(group) => toGroupDragId(group.id) === over.id,
+			);
+			if (oldIndex === -1 || newIndex === -1) return;
+
+			const reordered = arrayMove(sortedGroups, oldIndex, newIndex);
+			onReorderGroups(reordered.map((group) => group.id));
+			return;
+		}
+
 		const activeContainer = findContainer(String(active.id));
 		const overContainer = findContainer(String(over.id));
 		if (!activeContainer || !overContainer) return;
@@ -237,37 +281,40 @@ export function GroupedPendingBoard({
 		onMoveItems(placements);
 	}
 
-	const sortedGroups = [...groups].sort((a, b) => a.order - b.order);
-
 	return (
 		<DndContext
 			sensors={sensors}
-			collisionDetection={closestCenter}
+			collisionDetection={groupAwareCollisionDetection}
 			onDragOver={handleDragOver}
 			onDragEnd={handleDragEnd}
 		>
-			{sortedGroups.map((group) => (
-				<GroupSection
-					key={group.id}
-					group={group}
-					items={(containers[group.id] ?? [])
-						.map((id) => itemsById.get(id))
-						.filter((item): item is ShoppingItem => item !== undefined)}
-					settledItems={allItems
-						.filter(
-							(item) =>
-								item.groupId === group.id && item.status !== "unchecked",
-						)
-						.sort((a, b) => a.order - b.order)}
-					allItems={allItems}
-					onToggleCollapsed={onToggleCollapsed}
-					onRename={onRenameGroup}
-					onDelete={onDeleteGroup}
-					onStatusChange={onStatusChange}
-					onEditItem={onEditItem}
-					onDeleteItem={onDeleteItem}
-				/>
-			))}
+			<SortableContext
+				items={sortedGroups.map((group) => toGroupDragId(group.id))}
+				strategy={verticalListSortingStrategy}
+			>
+				{sortedGroups.map((group) => (
+					<GroupSection
+						key={group.id}
+						group={group}
+						items={(containers[group.id] ?? [])
+							.map((id) => itemsById.get(id))
+							.filter((item): item is ShoppingItem => item !== undefined)}
+						settledItems={allItems
+							.filter(
+								(item) =>
+									item.groupId === group.id && item.status !== "unchecked",
+							)
+							.sort((a, b) => a.order - b.order)}
+						allItems={allItems}
+						onToggleCollapsed={onToggleCollapsed}
+						onRename={onRenameGroup}
+						onDelete={onDeleteGroup}
+						onStatusChange={onStatusChange}
+						onEditItem={onEditItem}
+						onDeleteItem={onDeleteItem}
+					/>
+				))}
+			</SortableContext>
 
 			<UngroupedZone
 				itemIds={containers[UNGROUPED] ?? []}
