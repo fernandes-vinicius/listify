@@ -152,13 +152,13 @@ export function ItemRow({
 						{...dragHandleAttributes}
 						{...dragHandleListeners}
 						onClick={(event) => event.stopPropagation()}
-						className="shrink-0 cursor-grab touch-none text-muted-foreground/40 active:cursor-grabbing"
+						className="flex size-10 shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground/40 active:cursor-grabbing"
 						aria-label="Arrastar para reordenar"
 					>
-						<GripVertical className="size-3.5" />
+						<GripVertical className="size-5" />
 					</button>
 				) : (
-					<span className="size-3.5 shrink-0" aria-hidden="true" />
+					<span className="size-10 shrink-0" aria-hidden="true" />
 				)}
 
 				<ItemStatusToggle status={item.status} onChange={onStatusChange} />

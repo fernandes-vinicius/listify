@@ -260,7 +260,7 @@ export function ItemFormDrawer({
 							</Field>
 						)}
 
-						{mode === "edit" && groups.length > 0 && (
+						{groups.length > 0 && (
 							<Field>
 								<FieldLabel htmlFor="item-group">Grupo (opcional)</FieldLabel>
 								<Select
