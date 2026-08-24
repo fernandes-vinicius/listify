@@ -33,6 +33,7 @@ export interface ItemInput {
 	quantity: number;
 	unit: string;
 	price: number;
+	groupId?: string | null;
 }
 
 function compareNames(
@@ -81,7 +82,7 @@ export function addItem(
 		status: "unchecked",
 		order: insertIndex,
 		createdAt: new Date().toISOString(),
-		groupId: null,
+		groupId: input.groupId ?? null,
 	};
 
 	const nextItems = [

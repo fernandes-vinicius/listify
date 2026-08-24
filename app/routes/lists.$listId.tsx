@@ -502,6 +502,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 				onOpenChange={setAddOpen}
 				mode="add"
 				listName={list.name}
+				groups={list.groups}
 			/>
 
 			{editingItem &&
