@@ -290,6 +290,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const [isEditOpen, setEditOpen] = useState(false);
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
 	const [isAddOpen, setAddOpen] = useState(false);
+	const [addGroupId, setAddGroupId] = useState<string | null>(null);
 	const [editingItemId, setEditingItemId] = useState<string | null>(null);
 	const [editTarget, setEditTarget] = useState<"price" | undefined>(undefined);
 	const [isCreateGroupOpen, setCreateGroupOpen] = useState(false);
@@ -303,6 +304,11 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	function handleEditItem(itemId: string, target?: "price") {
 		setEditingItemId(itemId);
 		setEditTarget(target);
+	}
+
+	function handleOpenAdd(groupId: string | null = null) {
+		setAddGroupId(groupId);
+		setAddOpen(true);
 	}
 
 	const sortedItems = [...list.items].sort((a, b) => a.order - b.order);
@@ -411,7 +417,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 			<div className="mt-6 mb-4 flex flex-wrap items-center justify-between gap-2">
 				<h2 className="font-semibold text-lg tracking-tight">Itens</h2>
 				<div className="flex items-center gap-1.5">
-					<Button onClick={() => setAddOpen(true)}>
+					<Button onClick={() => handleOpenAdd()}>
 						<PlusIcon />
 						Adicionar item
 					</Button>
@@ -467,6 +473,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 								}
 								onEditItem={handleEditItem}
 								onDeleteItem={submitDeleteItem}
+								onAddItem={handleOpenAdd}
 							/>
 						</section>
 					) : (
@@ -498,11 +505,20 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 			)}
 
 			<ItemFormDrawer
+				key={addGroupId ?? "no-group"}
 				open={isAddOpen}
 				onOpenChange={setAddOpen}
 				mode="add"
 				listName={list.name}
 				groups={list.groups}
+				initialValues={{
+					name: "",
+					quantity: 1,
+					unit: "",
+					price: 0,
+					status: "unchecked",
+					groupId: addGroupId,
+				}}
 			/>
 
 			{editingItem &&

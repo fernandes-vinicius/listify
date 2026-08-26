@@ -64,6 +64,7 @@ interface GroupedPendingBoardProps {
 	onStatusChange: (itemId: string, status: ItemStatus) => void;
 	onEditItem: (itemId: string, editTarget?: "price") => void;
 	onDeleteItem: (itemId: string) => void;
+	onAddItem: (groupId: string) => void;
 }
 
 type Containers = Record<string, string[]>;
@@ -152,6 +153,7 @@ export function GroupedPendingBoard({
 	onStatusChange,
 	onEditItem,
 	onDeleteItem,
+	onAddItem,
 }: GroupedPendingBoardProps) {
 	const [containers, setContainers] = useState<Containers>(() =>
 		buildContainers(groups, items),
@@ -312,6 +314,7 @@ export function GroupedPendingBoard({
 						onStatusChange={onStatusChange}
 						onEditItem={onEditItem}
 						onDeleteItem={onDeleteItem}
+						onAddItem={onAddItem}
 					/>
 				))}
 			</SortableContext>
