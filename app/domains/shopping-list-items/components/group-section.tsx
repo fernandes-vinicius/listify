@@ -20,6 +20,7 @@ import {
 	GripVertical,
 	MoreVertical,
 	Pencil,
+	PlusIcon,
 	Trash2,
 } from "~/shared/components/icons";
 import {
@@ -43,6 +44,7 @@ interface GroupSectionProps {
 	onStatusChange: (itemId: string, status: ItemStatus) => void;
 	onEditItem: (itemId: string, editTarget?: "price") => void;
 	onDeleteItem: (itemId: string) => void;
+	onAddItem: (groupId: string) => void;
 }
 
 export function GroupSection({
@@ -56,6 +58,7 @@ export function GroupSection({
 	onStatusChange,
 	onEditItem,
 	onDeleteItem,
+	onAddItem,
 }: GroupSectionProps) {
 	const { setNodeRef, isOver } = useDroppable({ id: group.id });
 	const {
@@ -186,6 +189,15 @@ export function GroupSection({
 							onDelete={() => onDeleteItem(item.id)}
 						/>
 					))}
+
+					<button
+						type="button"
+						onClick={() => onAddItem(group.id)}
+						className="flex w-full items-center justify-center gap-1.5 border-t px-3 py-2.5 text-center text-muted-foreground text-xs hover:bg-muted hover:text-foreground"
+					>
+						<PlusIcon className="size-3.5" />
+						Adicionar item em "{group.name}"
+					</button>
 				</div>
 			)}
 		</div>
