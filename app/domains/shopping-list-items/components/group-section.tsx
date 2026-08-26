@@ -106,7 +106,7 @@ export function GroupSection({
 						group.collapsed && "-rotate-90",
 					)}
 				/>
-				<div className="flex min-w-0 flex-1 items-baseline gap-2">
+				<div className="flex min-w-0 flex-1 flex-col">
 					<span className="truncate font-bold text-sm">{group.name}</span>
 					<span className="shrink-0 text-muted-foreground text-xs">
 						{totalCount} {totalCount === 1 ? "item" : "itens"}
