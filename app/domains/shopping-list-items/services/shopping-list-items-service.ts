@@ -47,14 +47,18 @@ function compareNames(
 
 // Acha em que posição (dentre os itens já ordenados por `order`) um item com
 // esse nome deveria entrar, seguindo a mesma ordenação de `sortItemsByName` —
-// primeiro item existente que "vem depois" do novo nome.
+// primeiro item existente que "vem depois" do novo nome. Itens novos sempre
+// entram pendentes, então param antes do primeiro item concluído (comprado/
+// tenho em casa), mesmo que o nome dele viesse antes alfabeticamente.
 function findSortedInsertIndex(
 	items: ShoppingItem[],
 	name: string,
 	direction: ItemSortDirection,
 ): number {
 	const index = items.findIndex(
-		(existing) => compareNames(name, existing.name, direction) < 0,
+		(existing) =>
+			!isPending(existing.status) ||
+			compareNames(name, existing.name, direction) < 0,
 	);
 	return index === -1 ? items.length : index;
 }
@@ -182,10 +186,17 @@ export function setAllItemsStatus(
 	};
 }
 
+// Itens não pendentes (comprados ou "tenho em casa") vão sempre pro final da
+// lista ordenada, independente da direção A-Z/Z-A — evita um item concluído
+// ficar solto no meio dos pendentes.
+function isPending(status: ItemStatus): boolean {
+	return status === "unchecked";
+}
+
 // Reordena todos os itens da lista pelo nome (A-Z ou Z-A), reatribuindo
 // `order` de acordo — diferente de `reorderItems` (que só reordena um
 // subconjunto, ex.: drag-and-drop dentro de uma seção), esse afeta a lista
-// inteira de uma vez.
+// inteira de uma vez. Itens pendentes sempre vêm antes dos concluídos.
 export function sortItemsByName(
 	storage: StorageShape,
 	listId: string,
@@ -195,9 +206,12 @@ export function sortItemsByName(
 		lists: storage.lists.map((list) => {
 			if (list.id !== listId) return list;
 
-			const sorted = [...list.items].sort((a, b) =>
-				compareNames(a.name, b.name, direction),
-			);
+			const sorted = [...list.items].sort((a, b) => {
+				if (isPending(a.status) !== isPending(b.status)) {
+					return isPending(a.status) ? -1 : 1;
+				}
+				return compareNames(a.name, b.name, direction);
+			});
 
 			return {
 				...list,

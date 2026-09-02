@@ -91,6 +91,12 @@ export function ItemPriceEditDrawer({
 						value={initialValues.status}
 						readOnly
 					/>
+					<input
+						type="hidden"
+						name="groupId"
+						value={initialValues.groupId ?? "none"}
+						readOnly
+					/>
 					<input type="hidden" name="price" value={price} readOnly />
 
 					<SheetHeader className="p-4 text-center">
