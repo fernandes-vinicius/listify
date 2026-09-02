@@ -186,9 +186,15 @@ export function setAllItemsStatus(
 	};
 }
 
-// Itens não pendentes (comprados ou "tenho em casa") vão sempre pro final da
-// lista ordenada, independente da direção A-Z/Z-A — evita um item concluído
-// ficar solto no meio dos pendentes.
+// Prioridade do status na ordenação: pendentes primeiro, depois comprados,
+// depois "tenho em casa" — nessa ordem, sempre, independente da direção
+// A-Z/Z-A escolhida (que só se aplica dentro de cada grupo de status).
+const STATUS_SORT_RANK: Record<ItemStatus, number> = {
+	unchecked: 0,
+	checked: 1,
+	have_at_home: 2,
+};
+
 function isPending(status: ItemStatus): boolean {
 	return status === "unchecked";
 }
@@ -196,7 +202,8 @@ function isPending(status: ItemStatus): boolean {
 // Reordena todos os itens da lista pelo nome (A-Z ou Z-A), reatribuindo
 // `order` de acordo — diferente de `reorderItems` (que só reordena um
 // subconjunto, ex.: drag-and-drop dentro de uma seção), esse afeta a lista
-// inteira de uma vez. Itens pendentes sempre vêm antes dos concluídos.
+// inteira de uma vez. Status tem prioridade sobre o nome: pendentes vêm
+// antes de comprados, que vêm antes de "tenho em casa".
 export function sortItemsByName(
 	storage: StorageShape,
 	listId: string,
@@ -207,9 +214,9 @@ export function sortItemsByName(
 			if (list.id !== listId) return list;
 
 			const sorted = [...list.items].sort((a, b) => {
-				if (isPending(a.status) !== isPending(b.status)) {
-					return isPending(a.status) ? -1 : 1;
-				}
+				const statusDiff =
+					STATUS_SORT_RANK[a.status] - STATUS_SORT_RANK[b.status];
+				if (statusDiff !== 0) return statusDiff;
 				return compareNames(a.name, b.name, direction);
 			});
 
