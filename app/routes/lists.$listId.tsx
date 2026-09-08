@@ -8,6 +8,7 @@ import {
 	DeleteGroupDialog,
 	deleteGroup,
 	deleteItem,
+	filterItemsByName,
 	GroupedPendingBoard,
 	GroupFormDialog,
 	getListTotals,
@@ -15,6 +16,7 @@ import {
 	ItemFormDrawer,
 	type ItemPlacement,
 	ItemPriceEditDrawer,
+	ItemSearchInput,
 	ItemSection,
 	type ItemStatus,
 	ItemsSortMenu,
@@ -23,6 +25,7 @@ import {
 	renameGroup,
 	reorderGroups,
 	reorderItems,
+	SearchResultsSection,
 	type ShoppingGroup,
 	setAllItemsStatus,
 	setItemStatus,
@@ -72,6 +75,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/shared/components/ui/dropdown-menu";
+import { useDebouncedValue } from "~/shared/hooks/use-debounced-value";
 import { readStorage, writeStorage } from "~/shared/lib/storage";
 import { cn, formatCurrency } from "~/shared/lib/utils";
 
@@ -300,6 +304,9 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const [deletingGroup, setDeletingGroup] = useState<ShoppingGroup | null>(
 		null,
 	);
+	const [searchQuery, setSearchQuery] = useState("");
+	const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
+	const isSearching = debouncedSearchQuery.trim().length > 0;
 
 	function handleEditItem(itemId: string, target?: "price") {
 		setEditingItemId(itemId);
@@ -324,6 +331,9 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 	const ungroupedHomeItems = sortedItems.filter(
 		(item) => item.status === "have_at_home" && item.groupId === null,
 	);
+	const searchResults = isSearching
+		? filterItemsByName(sortedItems, debouncedSearchQuery)
+		: [];
 
 	const editingItem = editingItemId
 		? (list.items.find((item) => item.id === editingItemId) ?? null)
@@ -411,6 +421,14 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 				</DropdownMenu>
 			</div>
 
+			{list.items.length > 0 && (
+				<ItemSearchInput
+					value={searchQuery}
+					onChange={setSearchQuery}
+					className="mb-5"
+				/>
+			)}
+
 			<ListTotalsSummary items={list.items} />
 			{/* <BudgetAlert budget={list.budget} items={list.items} /> */}
 
@@ -443,6 +461,14 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 					</span>
 					<span className="text-xs">Adicione o primeiro item dessa lista.</span>
 				</div>
+			) : isSearching ? (
+				<SearchResultsSection
+					query={debouncedSearchQuery}
+					items={searchResults}
+					onStatusChange={(itemId, status) => submitStatus(itemId, status)}
+					onEditItem={handleEditItem}
+					onDeleteItem={submitDeleteItem}
+				/>
 			) : (
 				<>
 					{list.groups.length > 0 ? (
