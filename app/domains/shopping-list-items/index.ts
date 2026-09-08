@@ -6,9 +6,11 @@ export {
 	type ItemFormInitialValues,
 } from "~/domains/shopping-list-items/components/item-form-drawer";
 export { ItemPriceEditDrawer } from "~/domains/shopping-list-items/components/item-price-edit-drawer";
+export { ItemSearchInput } from "~/domains/shopping-list-items/components/item-search-input";
 export { ItemSection } from "~/domains/shopping-list-items/components/item-section";
 export { ItemsSortMenu } from "~/domains/shopping-list-items/components/items-sort-menu";
 export { ListTotalsSummary } from "~/domains/shopping-list-items/components/list-totals-summary";
+export { SearchResultsSection } from "~/domains/shopping-list-items/components/search-results-section";
 export { useItemsSortOrder } from "~/domains/shopping-list-items/hooks/use-items-sort-order";
 export {
 	useDeleteGroup,
@@ -56,6 +58,7 @@ export type {
 	ShoppingGroup,
 	ShoppingItem,
 } from "~/domains/shopping-list-items/types/item-types";
+export { filterItemsByName } from "~/domains/shopping-list-items/utils/filter-items";
 export {
 	getGroupTotal,
 	getItemTotal,
